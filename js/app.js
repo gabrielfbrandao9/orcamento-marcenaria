@@ -149,6 +149,11 @@
   const ICON = {
     plus: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>',
     back: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>',
+    clip: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m20 11.5-8.2 8.2a5 5 0 0 1-7.1-7.1l8.6-8.6a3.4 3.4 0 0 1 4.8 4.8l-8.6 8.6a1.7 1.7 0 0 1-2.4-2.4l7.9-7.9"/></svg>',
+    camera: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 8.5A1.5 1.5 0 0 1 4.5 7h2.7l1.6-2.5h6.4L16.8 7h2.7A1.5 1.5 0 0 1 21 8.5v9a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 17.5z"/><circle cx="12" cy="13" r="3.6"/></svg>',
+    download: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 10.5l5 5 5-5M5 20h14"/></svg>',
+    share: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="18" cy="5.5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="18.5" r="2.5"/><path d="m8.2 10.8 7.6-4.1M8.2 13.2l7.6 4.1"/></svg>',
+    image: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="15" rx="2"/><circle cx="9" cy="10" r="1.8"/><path d="m4 17 5-4.5 4 3.5 3-2.5 4 3.5"/></svg>',
   };
 
   // ---------- Dados ----------
@@ -202,7 +207,8 @@
   function isBlank(q) {
     return !q.clienteId && !(q.titulo || '').trim() && !(q.observacoes || '').trim()
       && (q.moveis || []).every((m) => !(m.nome || '').trim() && !(m.descricao || '').trim()
-        && (m.itens || []).every((it) => !it.materialId && !it.nome && !it.preco));
+        && (m.itens || []).every((it) => !it.materialId && !it.nome && !it.preco))
+      && !Anexos.list(q.id).length;
   }
 
   // ---------- Navegação ----------
@@ -330,15 +336,17 @@
       box.innerHTML = '<p class="muted">Nenhum orçamento encontrado.</p>';
       return;
     }
+    const nArquivos = Anexos.countByQuote();
     box.innerHTML = list.map((q) => {
       const c = Calc.quote(q);
       const moveis = (q.moveis || []).filter((m) => m.nome).map((m) => m.nome);
       const desc = q.titulo || moveis.join(', ') || 'Sem descrição';
       const n = (q.moveis || []).length;
+      const arq = nArquivos[q.id] || 0;
       return `<a class="qcard" href="#/orcamento/${q.id}">
         <span class="qnum">Nº ${pad3(q.numero)}</span>
         <span class="qmain"><strong>${esc(clientName(q, cById) || 'Sem cliente')}</strong>
-          <span>${esc(desc)} · ${n} ${n === 1 ? 'móvel' : 'móveis'}</span></span>
+          <span>${esc(desc)} · ${n} ${n === 1 ? 'móvel' : 'móveis'}${arq ? ` · ${arq} ${arq === 1 ? 'arquivo' : 'arquivos'}` : ''}</span></span>
         <span class="qside"><span class="badge s-${q.status}">${STATUS_LABEL[q.status] || ''}</span>
           <span class="money">${money(c.total)}</span><small>${fmtDate(q.data)}</small></span>
       </a>`;
@@ -478,6 +486,16 @@
             <label class="field"><span>Condições de pagamento</span><textarea data-f="condicoes" rows="3">${esc(q.condicoes)}</textarea></label>
             <label class="field" style="margin-top:12px"><span>Observações</span><textarea data-f="observacoes" rows="2" placeholder="Opcional: prazo de entrega, o que não está incluso…">${esc(q.observacoes)}</textarea></label>
           </section>
+          <section class="card files-card" id="filesCard">
+            <div class="card-head"><h3>Arquivos</h3></div>
+            <div class="files" id="files"></div>
+            <div class="file-actions">
+              <label class="btn small">${ICON.clip} Adicionar arquivo<input type="file" id="fileAdd" multiple hidden></label>
+              <label class="btn small camera-btn">${ICON.camera} Tirar foto<input type="file" id="fileCam" accept="image/*" capture="environment" hidden></label>
+            </div>
+            <p class="files-hint">Foto do móvel pronto, PDF do plano de corte, projeto… Ficam guardados neste orçamento
+              (não vão no PDF do cliente).<span class="drop-hint"> Também dá para arrastar arquivos para cá.</span></p>
+          </section>
         </div>
         <aside class="col-side">
           <section class="card">
@@ -505,6 +523,7 @@
         </aside>
       </div>`;
     renderMoveis();
+    renderFiles();
   }
 
   function renderMoveis() {
@@ -593,6 +612,11 @@
   }
 
   async function onEditorChange(t) {
+    if (t.id === 'fileAdd' || t.id === 'fileCam') {
+      const files = [...t.files];
+      t.value = '';
+      return addFiles(files);
+    }
     if (t.dataset.f === 'status') {
       editing.status = t.value;
       t.className = `status-select s-${t.value}`;
@@ -753,10 +777,22 @@
         if (!confirm(`Excluir o orçamento Nº ${pad3(editing.numero)}${nome ? ` (${nome})` : ''}? Não dá para desfazer.`)) return true;
         clearTimeout(saveTimer);
         saveTimer = null;
+        Anexos.removeForQuote(editing.id);
         Store.remove(editing.id);
         editing = null;
         location.hash = '#/orcamentos';
         toast('Orçamento excluído');
+        return true;
+      }
+      case 'open-file': openFile(fileOf(btn)); return true;
+      case 'share-file': shareFile(fileOf(btn)); return true;
+      case 'del-file': {
+        const a = fileOf(btn);
+        if (!a || !confirm(`Apagar o arquivo “${a.nome}” deste orçamento?`)) return true;
+        Anexos.remove(a);
+        dropThumb(a.id);
+        renderFiles();
+        toast('Arquivo apagado');
         return true;
       }
       case 'pdf-open': pdfOpen(); return true;
@@ -775,6 +811,164 @@
       default: return false;
     }
   }
+
+  // ---------- Arquivos do orçamento ----------
+
+  const thumbs = new Map(); // id do anexo -> URL da miniatura
+
+  function dropThumb(id) {
+    const url = thumbs.get(id);
+    if (url) URL.revokeObjectURL(url);
+    thumbs.delete(id);
+  }
+
+  const fileOf = (el) => {
+    const box = el.closest('[data-anexo]');
+    return box ? Store.get(box.dataset.anexo) : null;
+  };
+
+  const FILE_STATUS = {
+    nuvem: 'Na nuvem',
+    enviando: 'Enviando…',
+    local: 'Só neste aparelho',
+    erro: 'Não subiu para a nuvem',
+    remoto: 'Aguardando o outro aparelho enviar',
+  };
+
+  function fileKind(a) {
+    if (Anexos.isPdf(a)) return 'PDF';
+    if (Anexos.isImage(a)) return 'Foto';
+    const m = String(a.nome || '').match(/\.([a-z0-9]{1,6})$/i);
+    return m ? m[1].toUpperCase() : 'Arquivo';
+  }
+
+  function fileHtml(a) {
+    const st = Anexos.status(a);
+    const kind = fileKind(a);
+    const icon = Anexos.isImage(a) ? ICON.image : `<span class="file-ext">${esc(kind.slice(0, 4))}</span>`;
+    const err = st === 'erro' ? ` title="${esc(Anexos.error(a.id))}"` : '';
+    const share = canShareFiles();
+    return `<div class="file" data-anexo="${a.id}">
+      <button type="button" class="file-thumb${Anexos.isPdf(a) ? ' pdf' : ''}" data-act="open-file" aria-label="Abrir ${esc(a.nome)}">${icon}</button>
+      <div class="file-info">
+        <button type="button" class="file-name" data-act="open-file">${esc(a.nome)}</button>
+        <small>${kind} · ${Anexos.fmtSize(a.tamanho)} · <span class="fst fst-${st}"${err}>${FILE_STATUS[st]}</span></small>
+      </div>
+      <button type="button" class="icon" data-act="share-file" title="${share ? 'Enviar ou salvar' : 'Baixar'}" aria-label="${share ? 'Enviar ou salvar' : 'Baixar'}">${share ? ICON.share : ICON.download}</button>
+      <button type="button" class="icon del" data-act="del-file" aria-label="Apagar arquivo">×</button>
+    </div>`;
+  }
+
+  function renderFiles() {
+    const box = $('#files');
+    if (!box || !editing) return;
+    const list = Anexos.list(editing.id);
+    const aviso = Anexos.bucketMissing()
+      ? '<p class="files-warn">Os arquivos ainda não sobem para a nuvem: falta rodar o <strong>schema.sql</strong> atualizado no Supabase (veja SUPABASE.md). Eles estão salvos neste aparelho.</p>'
+      : '';
+    box.innerHTML = aviso + (list.length ? list.map(fileHtml).join('') : '<p class="no-files">Nenhum arquivo.</p>');
+    // Miniaturas das fotos (do aparelho ou baixadas da nuvem)
+    list.filter(Anexos.isImage).forEach(async (a) => {
+      let url = thumbs.get(a.id);
+      if (!url) {
+        try {
+          url = URL.createObjectURL(await Anexos.getBlob(a));
+          thumbs.set(a.id, url);
+        } catch (e) {
+          return;
+        }
+      }
+      const el = box.querySelector(`[data-anexo="${a.id}"] .file-thumb`);
+      if (el) el.innerHTML = `<img src="${url}" alt="">`;
+    });
+  }
+
+  let filesTimer;
+  function renderFilesSoon() {
+    clearTimeout(filesTimer);
+    filesTimer = setTimeout(renderFiles, 80);
+  }
+
+  async function addFiles(files) {
+    if (!files.length || !editing) return;
+    flushSave();
+    toast(files.length > 1 ? `Salvando ${files.length} arquivos…` : 'Salvando arquivo…', 10000);
+    try {
+      const r = await Anexos.add(editing.id, files);
+      renderFiles();
+      if (r.skipped.length) toast(`Arquivo grande demais (máximo de 20 MB): ${r.skipped.join(', ')}`, 6000);
+      else toast(r.added.length === 1 ? 'Arquivo adicionado' : `${r.added.length} arquivos adicionados`);
+    } catch (err) {
+      toast('Não foi possível salvar o arquivo: ' + err.message, 6000);
+    }
+  }
+
+  async function openFile(a) {
+    if (!a) return;
+    if (Anexos.isImage(a)) {
+      const dlg = $('#dlgViewer');
+      $('#viewerName').textContent = a.nome;
+      $('#viewerImg').removeAttribute('src');
+      dlg.dataset.anexo = a.id;
+      dlg.showModal();
+      try {
+        const blob = await Anexos.getBlob(a);
+        if (!thumbs.has(a.id)) thumbs.set(a.id, URL.createObjectURL(blob));
+        $('#viewerImg').src = thumbs.get(a.id);
+      } catch (err) {
+        dlg.close();
+        toast('Não foi possível abrir: ' + err.message, 6000);
+      }
+      return;
+    }
+    // PDF e outros: abre numa aba nova (aberta já, para o navegador não bloquear)
+    const w = window.open('', '_blank');
+    try {
+      const blob = await Anexos.getBlob(a);
+      const url = URL.createObjectURL(blob);
+      if (w) w.location.href = url;
+      else download(blob, a.nome);
+      setTimeout(() => URL.revokeObjectURL(url), 120000);
+    } catch (err) {
+      if (w) w.close();
+      toast('Não foi possível abrir: ' + err.message, 6000);
+    }
+  }
+
+  async function shareFile(a) {
+    if (!a) return;
+    let blob;
+    try {
+      blob = await Anexos.getBlob(a);
+      const file = new File([blob], a.nome, { type: a.tipo || blob.type });
+      if (canShareFiles() && navigator.canShare({ files: [file] })) await navigator.share({ files: [file], title: a.nome });
+      else download(blob, a.nome);
+    } catch (err) {
+      if (err && err.name === 'AbortError') return;
+      if (blob) download(blob, a.nome);
+      else toast('Não foi possível baixar: ' + err.message, 6000);
+    }
+  }
+
+  // Arrastar arquivos para o cartão "Arquivos" (computador)
+  const filesCardOf = (e) => (e.target.closest ? e.target.closest('#filesCard') : null);
+  view.addEventListener('dragover', (e) => {
+    const card = filesCardOf(e);
+    if (!card || !e.dataTransfer || ![...e.dataTransfer.types].includes('Files')) return;
+    e.preventDefault();
+    card.classList.add('drag');
+  });
+  view.addEventListener('dragleave', (e) => {
+    const card = filesCardOf(e);
+    if (card && !card.contains(e.relatedTarget)) card.classList.remove('drag');
+  });
+  view.addEventListener('drop', (e) => {
+    const card = filesCardOf(e);
+    if (!card) return;
+    e.preventDefault();
+    card.classList.remove('drag');
+    addFiles([...e.dataTransfer.files]);
+  });
 
   // ---------- PDF ----------
 
@@ -1069,6 +1263,8 @@
     if (st === 'offline') return `Sem internet. ${pend ? `${pend} alteração(ões) serão enviadas quando a conexão voltar.` : ''}`;
     if (st === 'error') return `Erro ao falar com a nuvem: ${(Store.lastError() || {}).message || 'tente de novo'}.`;
     if (st === 'saving') return 'Enviando alterações…';
+    if (Anexos.bucketMissing()) return 'Os dados estão na nuvem, mas os arquivos dos orçamentos ainda não: falta rodar o schema.sql atualizado no Supabase (veja SUPABASE.md).';
+    if (Anexos.uploading()) return 'Enviando arquivos para a nuvem…';
     return 'Tudo salvo na nuvem. Os dados aparecem em qualquer aparelho em que você entrar com esta conta.';
   }
 
@@ -1114,7 +1310,7 @@
         </section>
         <section class="card">
           <div class="card-head"><h3>Cópia de segurança</h3></div>
-          <p class="muted">Baixe um arquivo com todos os orçamentos, clientes e materiais. Guarde no computador ou no Google Drive.</p>
+          <p class="muted">Baixe um arquivo com todos os orçamentos, clientes e materiais. Guarde no computador ou no Google Drive. As fotos e PDFs anexados não vão nesse arquivo: eles ficam na nuvem.</p>
           <div class="btn-row">
             <button type="button" class="btn" data-act="export">Baixar cópia (.json)</button>
             <button type="button" class="btn" data-act="import">Restaurar cópia</button>
@@ -1276,6 +1472,10 @@
     else if (st === 'no-table') text = 'Nuvem não configurada';
     else if (st === 'error') text = 'Erro ao salvar';
     else text = 'Só neste aparelho';
+    if (Cloud.enabled && user && st === 'saved') {
+      if (Anexos.bucketMissing()) { text = 'Arquivos sem nuvem'; state = 'no-table'; }
+      else if (Anexos.uploading()) { text = 'Enviando arquivos…'; state = 'saving'; }
+    }
     el.textContent = text;
     el.dataset.state = state;
     el.title = syncText();
@@ -1285,8 +1485,10 @@
 
   let lastStatus = null;
   Store.on((ev) => {
+    if (ev.type === 'change' && current.name === 'orcamento' && editing) renderFilesSoon();
     if (ev.type === 'status') {
       renderSync();
+      if (ev.status === 'saved') Anexos.sync(); // dados em dia: envia o que faltar dos arquivos
       // A faixa de aviso da tabela aparece/some conforme o status.
       if ((ev.status === 'no-table') !== (lastStatus === 'no-table') && ['orcamentos', 'ajustes'].includes(current.name)) refreshFromRemote();
       lastStatus = ev.status;
@@ -1380,6 +1582,7 @@
       user = u;
       renderAccount();
       Store.setUser(u);
+      Anexos.setUser(u);
       renderSync();
       if (u && !previous && event === 'SIGNED_IN') {
         if ($('#dlgLogin').open) $('#dlgLogin').close();
@@ -1457,7 +1660,7 @@
       toast('App instalado! Procure “Orçamentos” na tela inicial.');
     });
 
-    window.addEventListener('online', () => { toast('Conexão restabelecida'); Store.sync(true); });
+    window.addEventListener('online', () => { toast('Conexão restabelecida'); Store.sync(true); Anexos.sync(); });
     window.addEventListener('offline', () => { renderSync(); toast('Sem internet: pode continuar usando. As alterações sobem quando a conexão voltar.', 5000); });
 
     // Ao voltar para o app, busca o que mudou em outro aparelho; ao sair, envia o que falta.
@@ -1474,6 +1677,10 @@
   function init() {
     $('#brandLogo').innerHTML = Logo.svg();
     renderTheme();
+    Anexos.on(() => { renderSync(); if (current.name === 'orcamento' && editing) renderFilesSoon(); });
+    Anexos.init();
+    $('#viewerShare').addEventListener('click', () => shareFile(Store.get($('#dlgViewer').dataset.anexo)));
+    $('#viewerShare').innerHTML = canShareFiles() ? `${ICON.share} Enviar` : `${ICON.download} Baixar`;
     Logo.pngDataUrl(); // prepara o logo do PDF
     $('#materialCategoria').innerHTML = CATEGORIAS.map((c) => `<option>${esc(c)}</option>`).join('');
     $('#materialUnidade').innerHTML = UNIDADES.map((u) => `<option>${esc(u)}</option>`).join('');

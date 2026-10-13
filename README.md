@@ -25,6 +25,11 @@ Funciona no navegador, sem servidor próprio. É só HTML, CSS e JavaScript, com
   - **Duplicar** um orçamento parecido para começar mais rápido.
   - Se um preço do catálogo mudou, o orçamento avisa e oferece **Usar preços do catálogo**.
   - Um orçamento novo deixado em branco é descartado sozinho.
+- **Arquivos do orçamento**: foto do móvel pronto, PDF do plano de corte, projeto ou qualquer outro
+  arquivo (até 20 MB cada). No celular dá para **tirar a foto na hora**; no computador, arrastar o
+  arquivo para o cartão. Fotos grandes são reduzidas automaticamente (até 2000 px). Os arquivos ficam
+  no aparelho e sobem para a nuvem (Supabase Storage); em outro aparelho, são baixados ao abrir.
+  Não entram no PDF do cliente.
 - **PDF para o cliente**: tudo detalhado (materiais de cada móvel linha a linha, mão de obra,
   margem, frete, instalação, total, à vista e parcelado) com o logo, os dados da marcenaria e as
   condições de pagamento. No celular, o botão **Enviar PDF** abre o compartilhamento do Android
@@ -68,11 +73,12 @@ Ao adicionar um arquivo novo ao site, inclua-o na lista `APP_FILES` do `sw.js` e
 | `js/app.js` | Telas e interação |
 | `js/calc.js` | Cálculo do orçamento |
 | `js/pdf.js` | Geração do PDF (jsPDF + AutoTable) |
+| `js/files.js` | Arquivos dos orçamentos (aparelho e Supabase Storage) |
 | `js/store.js` | Dados no aparelho e sincronização com a nuvem |
 | `js/cloud.js` | Login e acesso ao Supabase |
 | `js/logo.js` | Logo (usado no topo e no PDF) |
 | `js/config.js` | Endereço e chave pública do Supabase |
-| `supabase/schema.sql` | Tabela e regras de segurança no Supabase |
+| `supabase/schema.sql` | Tabela, bucket de arquivos e regras de segurança no Supabase |
 | `sw.js`, `manifest.webmanifest`, `icons/` | App instalável e funcionamento offline |
 
 ## Testar no computador

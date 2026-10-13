@@ -213,7 +213,7 @@
     },
 
     importAll(records) {
-      const tipos = ['material', 'cliente', 'orcamento', 'config'];
+      const tipos = ['material', 'cliente', 'orcamento', 'anexo', 'config'];
       let n = 0;
       records.forEach((r) => {
         if (!r || !r.id || !tipos.includes(r.tipo) || !r.dados) return;

@@ -5,8 +5,8 @@
 create table if not exists public.orcamento_registros (
   id uuid primary key,
   user_id uuid not null default auth.uid() references auth.users (id) on delete cascade,
-  -- material, cliente, orcamento ou config
-  tipo text not null check (tipo in ('material', 'cliente', 'orcamento', 'config')),
+  -- material, cliente, orcamento, anexo (arquivo de um orçamento) ou config
+  tipo text not null check (tipo in ('material', 'cliente', 'orcamento', 'anexo', 'config')),
   dados jsonb not null,
   -- exclusões são marcadas, não apagadas, para os outros aparelhos ficarem sabendo
   excluido boolean not null default false,
@@ -17,6 +17,11 @@ create table if not exists public.orcamento_registros (
   -- evita abusos: um registro não pode passar de ~500 KB
   constraint orcamento_registros_tamanho check (pg_column_size(dados) < 500000)
 );
+
+-- Para quem já tinha criado a tabela antes dos anexos: aceita o tipo "anexo"
+alter table public.orcamento_registros drop constraint if exists orcamento_registros_tipo_check;
+alter table public.orcamento_registros add constraint orcamento_registros_tipo_check
+  check (tipo in ('material', 'cliente', 'orcamento', 'anexo', 'config'));
 
 create index if not exists orcamento_registros_user_idx on public.orcamento_registros (user_id, tipo);
 
@@ -62,3 +67,33 @@ drop trigger if exists orcamento_registros_atualizado_em on public.orcamento_reg
 create trigger orcamento_registros_atualizado_em
   before update on public.orcamento_registros
   for each row execute function public.orcamento_set_atualizado_em();
+
+-- ---------------------------------------------------------------------------
+-- Arquivos dos orçamentos (fotos, PDF do plano de corte...) no Supabase Storage
+-- Cada arquivo fica em: <id da pessoa>/<id do orçamento>/<id do arquivo>.<extensão>
+-- O bucket é privado e cada pessoa só acessa a própria pasta. Limite: 20 MB por arquivo.
+
+insert into storage.buckets (id, name, public, file_size_limit)
+values ('orcamento-anexos', 'orcamento-anexos', false, 20971520)
+on conflict (id) do nothing;
+
+drop policy if exists "Anexos: ver os próprios" on storage.objects;
+create policy "Anexos: ver os próprios" on storage.objects
+  for select to authenticated
+  using (bucket_id = 'orcamento-anexos' and (storage.foldername(name))[1] = (select auth.uid())::text);
+
+drop policy if exists "Anexos: enviar os próprios" on storage.objects;
+create policy "Anexos: enviar os próprios" on storage.objects
+  for insert to authenticated
+  with check (bucket_id = 'orcamento-anexos' and (storage.foldername(name))[1] = (select auth.uid())::text);
+
+drop policy if exists "Anexos: alterar os próprios" on storage.objects;
+create policy "Anexos: alterar os próprios" on storage.objects
+  for update to authenticated
+  using (bucket_id = 'orcamento-anexos' and (storage.foldername(name))[1] = (select auth.uid())::text)
+  with check (bucket_id = 'orcamento-anexos' and (storage.foldername(name))[1] = (select auth.uid())::text);
+
+drop policy if exists "Anexos: apagar os próprios" on storage.objects;
+create policy "Anexos: apagar os próprios" on storage.objects
+  for delete to authenticated
+  using (bucket_id = 'orcamento-anexos' and (storage.foldername(name))[1] = (select auth.uid())::text);

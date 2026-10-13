@@ -187,6 +187,16 @@
     </form>
   </dialog>
 
+  <!-- Foto de um orçamento em tamanho grande -->
+  <dialog id="dlgViewer" class="viewer">
+    <div class="viewer-head">
+      <strong id="viewerName"></strong>
+      <button type="button" class="btn small" id="viewerShare">Baixar</button>
+      <button type="button" class="icon" value="close" aria-label="Fechar">×</button>
+    </div>
+    <img id="viewerImg" alt="">
+  </dialog>
+
   <input type="file" id="fileInput" accept=".json,application/json" hidden>
   <div id="toast" class="toast" role="status"></div>
 
@@ -199,6 +209,7 @@
   <script src="js/calc.js"></script>
   <script src="js/logo.js"></script>
   <script src="js/pdf.js"></script>
+  <script src="js/files.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>

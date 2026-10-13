@@ -1,8 +1,9 @@
 /*
  * Nuvem (Supabase): login e leitura/gravação da tabela "orcamento_registros".
- * Cada registro é um material, cliente, orçamento ou a configuração, guardado
- * como JSON. Se o Supabase não estiver configurado, Cloud.enabled = false e o
- * site funciona só com o armazenamento do aparelho.
+ * Cada registro é um material, cliente, orçamento, anexo ou a configuração,
+ * guardado como JSON. Os arquivos dos anexos ficam no Supabase Storage.
+ * Se o Supabase não estiver configurado, Cloud.enabled = false e o site
+ * funciona só com o armazenamento do aparelho.
  */
 (function (global) {
   'use strict';
@@ -11,6 +12,7 @@
   const enabled = !!(cfg.supabaseUrl && cfg.supabaseKey && global.supabase && global.supabase.createClient);
   const client = enabled ? global.supabase.createClient(cfg.supabaseUrl, cfg.supabaseKey) : null;
   const TABLE = 'orcamento_registros';
+  const BUCKET = 'orcamento-anexos';
   const COLS = 'id, tipo, dados, excluido, alterado_em';
   const PAGE = 1000;
 
@@ -72,6 +74,25 @@
         }));
         check(await client.from(TABLE).upsert(rows));
       }
+    },
+
+    // ---------- Arquivos (Supabase Storage) ----------
+
+    async uploadFile(path, blob, contentType) {
+      check(await client.storage.from(BUCKET).upload(path, blob, { contentType, upsert: true }));
+    },
+
+    async downloadFile(path) {
+      return check(await client.storage.from(BUCKET).download(path));
+    },
+
+    async removeFiles(paths) {
+      check(await client.storage.from(BUCKET).remove(paths));
+    },
+
+    // O bucket de arquivos ainda não foi criado (falta rodar o schema.sql atualizado).
+    isMissingBucket(err) {
+      return !!err && /bucket not found/i.test(err.message || '');
     },
 
     // A tabela ainda não foi criada no Supabase (falta rodar o schema.sql).

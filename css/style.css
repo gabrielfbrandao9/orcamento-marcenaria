@@ -578,6 +578,78 @@ input[type='search'] { padding-left: 34px; background: var(--surface) url("data:
 }
 .notice span { flex: 1 1 160px; }
 
+/* ---------- Arquivos do orçamento ---------- */
+
+.files-card { transition: border-color 0.15s, background 0.15s; }
+.files-card.drag { border-color: var(--accent); border-style: dashed; background: var(--accent-soft); }
+.files { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 8px; }
+.no-files { margin: 0; color: var(--muted); font-size: 14px; }
+.files-warn { grid-column: 1 / -1; margin: 0; padding: 9px 11px; border-radius: 9px; background: var(--s-pendente-bg); font-size: 13.5px; }
+.file {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 6px 4px 6px 6px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface-2);
+}
+.file-thumb {
+  display: grid;
+  place-items: center;
+  width: 54px;
+  height: 54px;
+  flex: none;
+  padding: 0;
+  border: 0;
+  border-radius: 7px;
+  overflow: hidden;
+  background: var(--wood-soft);
+  color: var(--wood);
+  cursor: pointer;
+}
+.file-thumb.pdf { background: var(--danger-soft); color: var(--danger); }
+.file-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.file-thumb svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.file-ext { font: 700 12px var(--mono); letter-spacing: 0.02em; }
+.file-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.file-name {
+  padding: 0;
+  border: 0;
+  background: none;
+  text-align: left;
+  font-weight: 500;
+  font-size: 14px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.file-name:hover { color: var(--accent); }
+.file-info small { font-size: 12px; color: var(--muted); }
+.file .icon svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.fst-nuvem { color: var(--ok); }
+.fst-enviando, .fst-remoto { color: var(--s-pendente); }
+.fst-erro { color: var(--danger); }
+.file-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+.file-actions label.btn { cursor: pointer; }
+.camera-btn { display: none !important; }
+@media (pointer: coarse) {
+  .camera-btn { display: inline-flex !important; }
+  .drop-hint { display: none; }
+}
+.files-hint { margin: 10px 0 0; font-size: 13px; color: var(--muted); }
+
+.viewer {
+  width: min(1000px, calc(100vw - 24px));
+  max-height: calc(100vh - 24px);
+  background: var(--surface);
+}
+.viewer-head { display: flex; align-items: center; gap: 10px; padding: 10px 10px 10px 16px; border-bottom: 1px solid var(--line); }
+.viewer-head strong { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 15px; }
+.viewer img { display: block; max-width: 100%; max-height: calc(100vh - 100px); margin: 0 auto; object-fit: contain; }
+
 /* ---------- Catálogo e clientes ---------- */
 
 .group + .group { margin-top: 18px; }

@@ -8,7 +8,7 @@
  *
  * Ao mudar a lista de arquivos, aumente a versão para limpar o cache antigo.
  */
-const VERSION = 'v2';
+const VERSION = 'v3';
 const CACHE = `dier-${VERSION}`;
 
 const APP_FILES = [
@@ -22,6 +22,7 @@ const APP_FILES = [
   'js/calc.js',
   'js/logo.js',
   'js/pdf.js',
+  'js/files.js',
   'js/app.js',
   'icons/icon-192.png',
   'icons/icon-512.png',
@@ -41,7 +42,7 @@ const NETWORK_TIMEOUT = 4000;
 self.addEventListener('install', (event) => {
   event.waitUntil((async () => {
     const cache = await caches.open(CACHE);
-    await cache.addAll(APP_FILES);
+    await cache.addAll(APP_FILES.map((url) => new Request(url, { cache: 'reload' }))); // versão nova, não a do cache do navegador
     // Arquivos externos: se algum falhar, o app continua instalável.
     await Promise.all(CDN_FILES.map((url) => cache.add(new Request(url, { mode: 'cors' })).catch(() => {})));
     self.skipWaiting();
@@ -63,11 +64,18 @@ function isCacheableCdn(url) {
 }
 
 // Rede primeiro, com limite de tempo; sem rede, usa o cache.
+// Sempre confere com o servidor (cache: 'no-cache'): sem isso o navegador pode
+// entregar um arquivo antigo do próprio cache e misturar versões do site.
+function fetchFresh(request) {
+  if (request.mode === 'navigate') return fetch(request.url, { cache: 'no-cache', credentials: 'same-origin' });
+  return fetch(request, { cache: 'no-cache' });
+}
+
 async function networkFirst(request) {
   const cache = await caches.open(CACHE);
   try {
     const response = await Promise.race([
-      fetch(request),
+      fetchFresh(request),
       new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), NETWORK_TIMEOUT)),
     ]);
     if (response.ok) cache.put(request, response.clone());
