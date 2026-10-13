@@ -15,8 +15,16 @@
   const $$ = (s, el = document) => [...el.querySelectorAll(s)];
   const view = $('#view');
 
-  const CATEGORIAS = ['Chapas', 'Fitas de borda', 'Ferragens', 'Puxadores', 'Acessórios', 'Outros'];
-  const UNIDADES = ['chapa', 'm', 'm²', 'un', 'par', 'pç', 'cx', 'kg', 'L'];
+  const CATEGORIAS = [
+    'Chapas', 'Fitas de borda', 'Dobradiças', 'Corrediças', 'Puxadores', 'Ferragens', 'Fixação e colas',
+    'Vidros e espelhos', 'Iluminação', 'Tintas e acabamentos', 'Acessórios', 'Serviços terceirizados', 'Outros',
+  ];
+  const UNIDADES = ['chapa', 'm', 'm²', 'un', 'par', 'pç', 'cx', 'kg', 'L', 'serviço'];
+  // Unidade sugerida ao escolher a categoria de um material novo
+  const UNIDADE_PADRAO = {
+    'Chapas': 'chapa', 'Fitas de borda': 'm', 'Corrediças': 'par', 'Vidros e espelhos': 'm²',
+    'Iluminação': 'm', 'Tintas e acabamentos': 'L', 'Serviços terceirizados': 'serviço',
+  };
   const STATUS = [
     { id: 'pendente', label: 'Pendente' },
     { id: 'aprovado', label: 'Aprovado' },
@@ -51,15 +59,20 @@
     ['Fundo HDF Branco 3 mm (2,75 x 1,85 m)', 'Chapas', 'chapa', 79],
     ['Fita de borda branca 22 mm', 'Fitas de borda', 'm', 0.9],
     ['Fita de borda amadeirada 22 mm', 'Fitas de borda', 'm', 1.6],
-    ['Dobradiça curva 35 mm com amortecedor', 'Ferragens', 'un', 9.9],
-    ['Corrediça telescópica 45 cm', 'Ferragens', 'par', 32],
-    ['Corrediça telescópica 50 cm', 'Ferragens', 'par', 36],
-    ['Parafuso 4,0 x 40 mm (caixa com 100)', 'Ferragens', 'cx', 18],
-    ['Pé regulável plástico', 'Ferragens', 'un', 3.5],
+    ['Dobradiça curva 35 mm com amortecedor', 'Dobradiças', 'un', 9.9],
+    ['Dobradiça reta 35 mm com amortecedor', 'Dobradiças', 'un', 9.9],
+    ['Corrediça telescópica 45 cm', 'Corrediças', 'par', 32],
+    ['Corrediça telescópica 50 cm', 'Corrediças', 'par', 36],
     ['Puxador perfil alumínio', 'Puxadores', 'm', 35],
     ['Puxador alça 128 mm', 'Puxadores', 'un', 12],
+    ['Pé regulável plástico', 'Ferragens', 'un', 3.5],
+    ['Suporte de prateleira (pino)', 'Ferragens', 'un', 0.3],
+    ['Parafuso 4,0 x 40 mm (caixa com 100)', 'Fixação e colas', 'cx', 18],
+    ['Cola branca PVA', 'Fixação e colas', 'kg', 24],
+    ['Espelho 4 mm', 'Vidros e espelhos', 'm²', 180],
+    ['Fita de LED 12 V (luz quente)', 'Iluminação', 'm', 15],
+    ['Verniz PU', 'Tintas e acabamentos', 'L', 65],
     ['Cabideiro oval alumínio', 'Acessórios', 'm', 28],
-    ['Cola branca PVA', 'Acessórios', 'kg', 24],
   ];
 
   const NUM_FIELDS = ['maoDeObraPct', 'margemPct', 'frete', 'instalacao', 'descontoVistaPct', 'parcelasMax', 'jurosPct'];
@@ -845,7 +858,7 @@
     $('#materialTitle').textContent = mat ? 'Editar material' : 'Novo material';
     f.nome.value = mat ? mat.nome : '';
     f.categoria.value = mat ? (CATEGORIAS.includes(mat.categoria) ? mat.categoria : 'Outros') : (filters.catalogo.cat || 'Chapas');
-    f.unidade.value = mat ? mat.unidade : (f.categoria.value === 'Chapas' ? 'chapa' : 'un');
+    f.unidade.value = mat ? mat.unidade : UNIDADE_PADRAO[f.categoria.value] || 'un';
     f.preco.value = mat ? moneyNum(mat.preco) : '';
     $('#btnDelMaterial').hidden = !mat;
     $('#btnDelMaterial').onclick = () => {
@@ -855,8 +868,7 @@
       toast('Material excluído');
     };
     f.categoria.onchange = () => {
-      if (!mat && f.categoria.value === 'Chapas') f.unidade.value = 'chapa';
-      else if (!mat && f.categoria.value === 'Fitas de borda') f.unidade.value = 'm';
+      if (!mat) f.unidade.value = UNIDADE_PADRAO[f.categoria.value] || 'un';
     };
     return openDialog(dlg, () => {
       const saved = Store.put('material', {
@@ -1085,6 +1097,14 @@
           ${cfgField('condicoes', 'Condições de pagamento', { textarea: true })}
         </section>
         <section class="card">
+          <div class="card-head"><h3>Aparência</h3></div>
+          <div class="segmented" role="group" aria-label="Tema">
+            ${[['auto', 'Automático'], ['light', 'Claro'], ['dark', 'Escuro']].map(([v, l]) => `<button type="button" data-act="theme" data-value="${v}" class="${themeChoice === v ? 'on' : ''}">${l}</button>`).join('')}
+          </div>
+          <p class="muted" style="margin:10px 0 0">Automático segue o tema do celular ou do computador. Também dá para trocar no botão
+            <span aria-hidden="true">☀</span> do topo.</p>
+        </section>
+        <section class="card">
           <div class="card-head"><h3>Conta e nuvem</h3></div>
           ${email ? `<p>Conectado como <strong>${esc(email)}</strong>.</p>` : ''}
           <p class="muted" id="syncText">${esc(syncText())}</p>
@@ -1234,6 +1254,8 @@
       case 'export': return exportBackup();
       case 'import': return importBackup();
       case 'install': return install();
+      case 'toggle-theme': return setTheme(isDark() ? 'light' : 'dark');
+      case 'theme': return setTheme(btn.dataset.value);
       default:
     }
   });
@@ -1370,6 +1392,44 @@
     });
   }
 
+  // ---------- Tema claro/escuro ----------
+  // "auto" segue o aparelho; "light"/"dark" ficam guardados só neste aparelho.
+
+  const darkQuery = window.matchMedia('(prefers-color-scheme: dark)');
+  let themeChoice = (() => {
+    try {
+      const t = localStorage.getItem('dier:tema');
+      return t === 'light' || t === 'dark' ? t : 'auto';
+    } catch (e) {
+      return 'auto';
+    }
+  })();
+
+  const isDark = () => themeChoice === 'dark' || (themeChoice === 'auto' && darkQuery.matches);
+
+  function setTheme(choice) {
+    themeChoice = choice;
+    if (choice === 'auto') delete document.documentElement.dataset.theme;
+    else document.documentElement.dataset.theme = choice;
+    try {
+      if (choice === 'auto') localStorage.removeItem('dier:tema');
+      else localStorage.setItem('dier:tema', choice);
+    } catch (e) { /* sem armazenamento: vale até fechar */ }
+    renderTheme();
+  }
+
+  function renderTheme() {
+    const dark = isDark();
+    document.documentElement.classList.toggle('dark', dark);
+    const label = dark ? 'Mudar para o modo claro' : 'Mudar para o modo escuro';
+    const btn = $('#btnTheme');
+    btn.title = label;
+    btn.setAttribute('aria-label', label);
+    $$('[data-act="theme"]', view).forEach((b) => b.classList.toggle('on', b.dataset.value === themeChoice));
+  }
+
+  darkQuery.addEventListener('change', renderTheme);
+
   // ---------- App instalável ----------
 
   async function install() {
@@ -1413,6 +1473,7 @@
 
   function init() {
     $('#brandLogo').innerHTML = Logo.svg();
+    renderTheme();
     Logo.pngDataUrl(); // prepara o logo do PDF
     $('#materialCategoria').innerHTML = CATEGORIAS.map((c) => `<option>${esc(c)}</option>`).join('');
     $('#materialUnidade').innerHTML = UNIDADES.map((u) => `<option>${esc(u)}</option>`).join('');

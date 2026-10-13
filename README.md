@@ -31,9 +31,13 @@ Funciona no navegador, sem servidor próprio. É só HTML, CSS e JavaScript, com
   (WhatsApp, e-mail…).
 - **Clientes**: nome, telefone, endereço e anotações, com atalho para o WhatsApp e para criar
   um orçamento.
-- **Catálogo**: chapas, fitas de borda, ferragens, puxadores, acessórios e outros, com o preço de custo.
+- **Catálogo**: materiais com o preço de custo, separados em categorias: chapas, fitas de borda,
+  dobradiças, corrediças, puxadores, ferragens, fixação e colas, vidros e espelhos, iluminação,
+  tintas e acabamentos, acessórios, serviços terceirizados e outros.
   **Reajustar preços** aumenta (ou diminui) todos de uma vez, ou só uma categoria.
   Os orçamentos já feitos guardam o preço da época e não mudam.
+- **Modo claro e escuro**: botão ☀/☾ no topo, ou em **Ajustes → Aparência** (Automático segue o
+  tema do celular ou do computador).
 - **Ajustes**: dados da marcenaria (saem no PDF), valores padrão para orçamentos novos
   (mão de obra, margem, desconto, parcelas, juros, condições de pagamento), conta e
   **cópia de segurança** (baixar e restaurar um arquivo `.json`).
