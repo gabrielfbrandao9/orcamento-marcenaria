@@ -1,0 +1,192 @@
+{
+ "app": "orcamento-marcenaria",
+ "versao": 1,
+ "exportadoEm": "2026-10-13T12:43:20.278793+00:00",
+ "registros": [
+  {
+   "id": "971ada84-e663-44ee-9490-670a8992aa18",
+   "tipo": "material",
+   "dados": {
+    "id": "971ada84-e663-44ee-9490-670a8992aa18",
+    "nome": "MDF Amadeirado 15 mm (2,75 x 1,85 m)",
+    "categoria": "Chapas",
+    "unidade": "chapa",
+    "preco": 389
+   }
+  },
+  {
+   "id": "821c06ef-9272-4068-b995-9785209cca3f",
+   "tipo": "material",
+   "dados": {
+    "id": "821c06ef-9272-4068-b995-9785209cca3f",
+    "nome": "MDF Branco 6 mm (2,75 x 1,85 m)",
+    "categoria": "Chapas",
+    "unidade": "chapa",
+    "preco": 145
+   }
+  },
+  {
+   "id": "e82b1e03-1ac1-4d77-8e74-8766644836eb",
+   "tipo": "material",
+   "dados": {
+    "id": "e82b1e03-1ac1-4d77-8e74-8766644836eb",
+    "nome": "Fita de borda amadeirada 22 mm",
+    "categoria": "Fitas de borda",
+    "unidade": "m",
+    "preco": 1.6
+   }
+  },
+  {
+   "id": "38dabafa-3de0-4ff0-b0a6-924441c45a9f",
+   "tipo": "material",
+   "dados": {
+    "id": "38dabafa-3de0-4ff0-b0a6-924441c45a9f",
+    "nome": "Dobradiça curva 35 mm com amortecedor",
+    "categoria": "Dobradiças",
+    "unidade": "un",
+    "preco": 9.9
+   }
+  },
+  {
+   "id": "678962ac-67cc-40a5-93a0-c3d8745af75f",
+   "tipo": "material",
+   "dados": {
+    "id": "678962ac-67cc-40a5-93a0-c3d8745af75f",
+    "nome": "Corrediça telescópica 45 cm",
+    "categoria": "Corrediças",
+    "unidade": "par",
+    "preco": 32
+   }
+  },
+  {
+   "id": "17763cfb-36fe-4ec1-8e50-fff7dcc74757",
+   "tipo": "material",
+   "dados": {
+    "id": "17763cfb-36fe-4ec1-8e50-fff7dcc74757",
+    "nome": "Parafuso 4,0 x 40 mm (caixa com 100)",
+    "categoria": "Fixação e colas",
+    "unidade": "cx",
+    "preco": 18
+   }
+  },
+  {
+   "id": "fa5fc2e3-535c-4584-be39-2d52b14e14ed",
+   "tipo": "material",
+   "dados": {
+    "id": "fa5fc2e3-535c-4584-be39-2d52b14e14ed",
+    "nome": "Puxador alça 128 mm",
+    "categoria": "Puxadores",
+    "unidade": "un",
+    "preco": 12
+   }
+  },
+  {
+   "id": "c451d411-0fcc-448c-8426-7a184f64e92b",
+   "tipo": "material",
+   "dados": {
+    "id": "c451d411-0fcc-448c-8426-7a184f64e92b",
+    "nome": "Cabideiro oval alumínio",
+    "categoria": "Acessórios",
+    "unidade": "m",
+    "preco": 28
+   }
+  },
+  {
+   "id": "49c815d3-b213-4740-8d67-9282a7c20d66",
+   "tipo": "orcamento",
+   "dados": {
+    "id": "49c815d3-b213-4740-8d67-9282a7c20d66",
+    "numero": 1,
+    "data": "2026-10-13",
+    "status": "pendente",
+    "clienteId": "",
+    "clienteNome": "",
+    "titulo": "Guarda-roupa 4 portas e 4 gavetas",
+    "moveis": [
+     {
+      "id": "86e08f59-eeff-4f98-8050-c650a1e5b658",
+      "nome": "Guarda-roupa 4 portas e 4 gavetas",
+      "qtd": 1,
+      "descricao": "2,20 m de altura x 1,80 m de largura x 0,53 m de profundidade. Caixa, portas e gavetas em MDF 15 mm amadeirado, fundos em MDF 6 mm branco. 4 portas de abrir, 4 gavetas com corrediça telescópica, 6 prateleiras e cabideiro.",
+      "itens": [
+       {
+        "id": "3b310e83-bd18-4178-b29c-6f2801affec3",
+        "materialId": "971ada84-e663-44ee-9490-670a8992aa18",
+        "nome": "MDF Amadeirado 15 mm (2,75 x 1,85 m)",
+        "unidade": "chapa",
+        "preco": 389,
+        "qtd": 3
+       },
+       {
+        "id": "2171f27e-b72b-448d-8ac0-035a9ff6cbda",
+        "materialId": "821c06ef-9272-4068-b995-9785209cca3f",
+        "nome": "MDF Branco 6 mm (2,75 x 1,85 m)",
+        "unidade": "chapa",
+        "preco": 145,
+        "qtd": 2
+       },
+       {
+        "id": "45b4be76-4817-43b9-a61e-c5e4292d702e",
+        "materialId": "e82b1e03-1ac1-4d77-8e74-8766644836eb",
+        "nome": "Fita de borda amadeirada 22 mm",
+        "unidade": "m",
+        "preco": 1.6,
+        "qtd": 60
+       },
+       {
+        "id": "bf3ebaee-fc37-4d1f-bed6-ded96aace013",
+        "materialId": "38dabafa-3de0-4ff0-b0a6-924441c45a9f",
+        "nome": "Dobradiça curva 35 mm com amortecedor",
+        "unidade": "un",
+        "preco": 9.9,
+        "qtd": 12
+       },
+       {
+        "id": "d007c0d0-4b68-464c-ab28-7d85b96c9c1c",
+        "materialId": "678962ac-67cc-40a5-93a0-c3d8745af75f",
+        "nome": "Corrediça telescópica 45 cm",
+        "unidade": "par",
+        "preco": 32,
+        "qtd": 4
+       },
+       {
+        "id": "b5121ed1-8d79-476c-8e1f-abc587e36a1b",
+        "materialId": "17763cfb-36fe-4ec1-8e50-fff7dcc74757",
+        "nome": "Parafuso 4,0 x 40 mm (caixa com 100)",
+        "unidade": "cx",
+        "preco": 18,
+        "qtd": 2
+       },
+       {
+        "id": "e5621ae5-14af-49cb-8e11-25cd7ad65c2e",
+        "materialId": "fa5fc2e3-535c-4584-be39-2d52b14e14ed",
+        "nome": "Puxador alça 128 mm",
+        "unidade": "un",
+        "preco": 12,
+        "qtd": 8
+       },
+       {
+        "id": "f9306bbc-1960-46fc-8e81-7499f13102d7",
+        "materialId": "c451d411-0fcc-448c-8426-7a184f64e92b",
+        "nome": "Cabideiro oval alumínio",
+        "unidade": "m",
+        "preco": 28,
+        "qtd": 0.9
+       }
+      ]
+     }
+    ],
+    "maoDeObraPct": 100,
+    "margemPct": 20,
+    "frete": 0,
+    "instalacao": 0,
+    "descontoVistaPct": 5,
+    "parcelasMax": 10,
+    "jurosPct": 0,
+    "condicoes": "50% de entrada na aprovação do orçamento e 50% na entrega.\nPix, dinheiro ou cartão.",
+    "observacoes": "Quantidade de chapas calculada pelo Otimizador de Cortes (3 chapas de MDF 15 mm e 2 de MDF 6 mm). Fita de borda: 55 m pelo plano de corte + 10% de folga.",
+    "criadoEm": 1791892800000
+   }
+  }
+ ]
+}
