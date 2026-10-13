@@ -1,0 +1,93 @@
+# Orçamentos · Marcenaria Dier
+
+Site (e app para celular) para a **Marcenaria Dier**, de Itapajé - CE, montar orçamentos de móveis
+e enviar ao cliente em PDF.
+
+Funciona no navegador, sem servidor próprio. É só HTML, CSS e JavaScript, como o
+[Otimizador de Cortes](../otimizador-de-cortes).
+
+## Como funciona
+
+**Preço = materiais + mão de obra + margem de lucro + frete + instalação**
+
+- **Materiais**: soma dos materiais de cada móvel (quantidade × preço de custo), multiplicada pela
+  quantidade do móvel.
+- **Mão de obra**: um percentual sobre os materiais (ex.: 100%).
+- **Margem de lucro**: um percentual sobre materiais + mão de obra (ex.: 20%).
+- **Frete** e **instalação**: valores em reais.
+- **À vista** com desconto (%) e **parcelado** em até N vezes, com ou sem juros ao mês.
+
+## Telas
+
+- **Orçamentos**: lista com busca e filtro por situação (pendente, aprovado, recusado,
+  em produção, entregue). Cada orçamento tem número, cliente, data, projeto e vários **móveis**,
+  e cada móvel tem seus materiais.
+  - **Duplicar** um orçamento parecido para começar mais rápido.
+  - Se um preço do catálogo mudou, o orçamento avisa e oferece **Usar preços do catálogo**.
+  - Um orçamento novo deixado em branco é descartado sozinho.
+- **PDF para o cliente**: tudo detalhado (materiais de cada móvel linha a linha, mão de obra,
+  margem, frete, instalação, total, à vista e parcelado) com o logo, os dados da marcenaria e as
+  condições de pagamento. No celular, o botão **Enviar PDF** abre o compartilhamento do Android
+  (WhatsApp, e-mail…).
+- **Clientes**: nome, telefone, endereço e anotações, com atalho para o WhatsApp e para criar
+  um orçamento.
+- **Catálogo**: chapas, fitas de borda, ferragens, puxadores, acessórios e outros, com o preço de custo.
+  **Reajustar preços** aumenta (ou diminui) todos de uma vez, ou só uma categoria.
+  Os orçamentos já feitos guardam o preço da época e não mudam.
+- **Ajustes**: dados da marcenaria (saem no PDF), valores padrão para orçamentos novos
+  (mão de obra, margem, desconto, parcelas, juros, condições de pagamento), conta e
+  **cópia de segurança** (baixar e restaurar um arquivo `.json`).
+
+## Onde ficam os dados
+
+Tudo é salvo **primeiro no aparelho** (funciona sem internet) e, com a conta conectada,
+enviado para a **nuvem** (Supabase). Ao abrir o app em outro aparelho com a mesma conta, os dados
+aparecem lá. Se o mesmo item for alterado em dois aparelhos, vale a alteração mais recente.
+
+O login e o projeto Supabase são **os mesmos do Otimizador de Cortes**. Para ligar a nuvem, é preciso
+criar a tabela uma vez: veja [SUPABASE.md](SUPABASE.md).
+
+## Aplicativo para Android
+
+1. No celular, abra o site no **Chrome**.
+2. Toque em **⋮ → Instalar app** (ou **Adicionar à tela inicial**).
+3. O ícone da Marcenaria Dier aparece na tela inicial. O app abre em tela cheia e funciona sem internet.
+
+Ao adicionar um arquivo novo ao site, inclua-o na lista `APP_FILES` do `sw.js` e aumente a `VERSION`.
+
+## Arquivos
+
+| Arquivo | O que faz |
+|---|---|
+| `index.html` | Página e diálogos |
+| `css/style.css` | Visual (claro e escuro, celular e computador) |
+| `js/app.js` | Telas e interação |
+| `js/calc.js` | Cálculo do orçamento |
+| `js/pdf.js` | Geração do PDF (jsPDF + AutoTable) |
+| `js/store.js` | Dados no aparelho e sincronização com a nuvem |
+| `js/cloud.js` | Login e acesso ao Supabase |
+| `js/logo.js` | Logo (usado no topo e no PDF) |
+| `js/config.js` | Endereço e chave pública do Supabase |
+| `supabase/schema.sql` | Tabela e regras de segurança no Supabase |
+| `sw.js`, `manifest.webmanifest`, `icons/` | App instalável e funcionamento offline |
+
+## Testar no computador
+
+```bash
+python -m http.server 8766
+```
+
+Depois acesse http://localhost:8766.
+
+## Publicar no GitHub Pages
+
+1. Crie um repositório vazio no GitHub chamado `orcamento-marcenaria`.
+2. Nesta pasta, rode:
+
+   ```bash
+   git remote add origin https://github.com/gabrielfbrandao9/orcamento-marcenaria.git
+   git push -u origin main
+   ```
+
+3. No GitHub: **Settings → Pages → Branch: main / (root) → Save**.
+4. Em alguns minutos o site fica em `https://gabrielfbrandao9.github.io/orcamento-marcenaria/`.

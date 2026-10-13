@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#7b4a26">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="robots" content="noindex">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <title>Orçamentos · Marcenaria Dier</title>
+  <link rel="icon" href="icons/icon-192.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#/orcamentos" aria-label="Início">
+      <span class="logo" id="brandLogo" aria-hidden="true"></span>
+      <span class="brand-text">
+        <strong>Marcenaria Dier</strong>
+        <small>Orçamentos</small>
+      </span>
+    </a>
+
+    <nav class="nav" id="nav" aria-label="Seções">
+      <a href="#/orcamentos" data-route="orcamentos">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5M10 13h6M10 17h6"/></svg>
+        <span>Orçamentos</span>
+      </a>
+      <a href="#/clientes" data-route="clientes">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.6 3.2-5.5 6.5-5.5s5.9 1.9 6.5 5.5"/><path d="M16 4.8a3.3 3.3 0 0 1 0 6.4M18 14.8c2 .7 3.2 2.4 3.6 5.2"/></svg>
+        <span>Clientes</span>
+      </a>
+      <a href="#/catalogo" data-route="catalogo">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7.5 12 3l9 4.5-9 4.5z"/><path d="m3 12 9 4.5 9-4.5M3 16.5 12 21l9-4.5"/></svg>
+        <span>Catálogo</span>
+      </a>
+      <a href="#/ajustes" data-route="ajustes">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M4.6 4.6l2.1 2.1M17.3 17.3l2.1 2.1M2.5 12h3M18.5 12h3M4.6 19.4l2.1-2.1M17.3 6.7l2.1-2.1"/></svg>
+        <span>Ajustes</span>
+      </a>
+    </nav>
+
+    <div class="top-right">
+      <button type="button" class="sync" id="syncStatus" data-act="sync-info"></button>
+      <button type="button" class="btn primary install-btn" id="btnInstall" hidden>Instalar app</button>
+      <div class="account" id="account" hidden></div>
+    </div>
+  </header>
+
+  <main id="view" class="view" tabindex="-1"></main>
+
+  <!-- Material do catálogo -->
+  <dialog id="dlgMaterial">
+    <form method="dialog" class="dlg" id="formMaterial">
+      <div class="dlg-head">
+        <h2 id="materialTitle">Material</h2>
+        <button type="button" class="icon" value="cancel" aria-label="Fechar">×</button>
+      </div>
+      <label class="field">
+        <span>Nome</span>
+        <input name="nome" required autofocus placeholder="Ex.: MDF Branco TX 15 mm" autocomplete="off">
+      </label>
+      <div class="field-row">
+        <label class="field">
+          <span>Categoria</span>
+          <select name="categoria" id="materialCategoria"></select>
+        </label>
+        <label class="field">
+          <span>Unidade</span>
+          <select name="unidade" id="materialUnidade"></select>
+        </label>
+      </div>
+      <label class="field">
+        <span>Preço de custo (R$)</span>
+        <input name="preco" inputmode="decimal" placeholder="0,00" autocomplete="off">
+      </label>
+      <div class="dlg-actions">
+        <button type="button" class="btn danger-ghost" id="btnDelMaterial">Excluir</button>
+        <span class="spacer"></span>
+        <button class="btn" value="cancel" type="button">Cancelar</button>
+        <button class="btn primary" value="ok">Salvar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Cliente -->
+  <dialog id="dlgCliente">
+    <form method="dialog" class="dlg" id="formCliente">
+      <div class="dlg-head">
+        <h2 id="clienteTitle">Cliente</h2>
+        <button type="button" class="icon" value="cancel" aria-label="Fechar">×</button>
+      </div>
+      <label class="field">
+        <span>Nome</span>
+        <input name="nome" required autofocus placeholder="Nome do cliente" autocomplete="off">
+      </label>
+      <label class="field">
+        <span>Telefone / WhatsApp</span>
+        <input name="telefone" type="tel" inputmode="tel" placeholder="(85) 90000-0000" autocomplete="off">
+      </label>
+      <label class="field">
+        <span>Endereço</span>
+        <input name="endereco" placeholder="Rua, número, bairro" autocomplete="off">
+      </label>
+      <label class="field">
+        <span>Cidade</span>
+        <input name="cidade" placeholder="Itapajé - CE" autocomplete="off">
+      </label>
+      <label class="field">
+        <span>Anotações</span>
+        <textarea name="obs" rows="2" placeholder="Ex.: indicação do João, prefere contato à tarde"></textarea>
+      </label>
+      <div class="dlg-actions">
+        <button type="button" class="btn danger-ghost" id="btnDelCliente">Excluir</button>
+        <span class="spacer"></span>
+        <button class="btn" value="cancel" type="button">Cancelar</button>
+        <button class="btn primary" value="ok">Salvar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Reajuste de preços -->
+  <dialog id="dlgReajuste">
+    <form method="dialog" class="dlg" id="formReajuste">
+      <div class="dlg-head">
+        <h2>Reajustar preços</h2>
+        <button type="button" class="icon" value="cancel" aria-label="Fechar">×</button>
+      </div>
+      <p class="muted dlg-text">Aumenta (ou diminui) o preço de custo de vários materiais de uma vez.
+        Os orçamentos já feitos não mudam.</p>
+      <div class="field-row">
+        <label class="field">
+          <span>Reajuste (%)</span>
+          <input name="pct" autofocus inputmode="decimal" placeholder="Ex.: 8 ou -5" autocomplete="off" required>
+        </label>
+        <label class="field">
+          <span>Quais materiais</span>
+          <select name="categoria" id="reajusteCategoria"></select>
+        </label>
+      </div>
+      <p class="reajuste-preview" id="reajustePreview"></p>
+      <div class="dlg-actions">
+        <span class="spacer"></span>
+        <button class="btn" value="cancel" type="button">Cancelar</button>
+        <button class="btn primary" value="ok">Aplicar reajuste</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Login -->
+  <dialog id="dlgLogin">
+    <form method="dialog" class="dlg">
+      <div class="dlg-head">
+        <h2>Entrar</h2>
+        <button type="button" class="icon" value="close" aria-label="Fechar">×</button>
+      </div>
+      <p class="muted dlg-text">Entre para guardar orçamentos, clientes e catálogo na nuvem e usar no celular e no computador.
+        É a mesma conta do Otimizador de Cortes.</p>
+      <button type="button" class="btn big google" id="btnGoogle">
+        <svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>
+        Entrar com Google
+      </button>
+      <div class="sep" id="loginSep"><span>ou</span></div>
+      <div id="emailLogin">
+        <label class="field">
+          <span>Receber um link de acesso por e-mail</span>
+          <input type="email" id="loginEmail" placeholder="voce@exemplo.com" autocomplete="email">
+        </label>
+        <button type="button" class="btn primary email-btn" id="btnEmail">Enviar link de acesso</button>
+      </div>
+      <p id="loginMsg" class="login-msg" role="status"></p>
+    </form>
+  </dialog>
+
+  <input type="file" id="fileInput" accept=".json,application/json" hidden>
+  <div id="toast" class="toast" role="status"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/cloud.js"></script>
+  <script src="js/store.js"></script>
+  <script src="js/calc.js"></script>
+  <script src="js/logo.js"></script>
+  <script src="js/pdf.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
