@@ -246,6 +246,7 @@
     camera: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 8.5A1.5 1.5 0 0 1 4.5 7h2.7l1.6-2.5h6.4L16.8 7h2.7A1.5 1.5 0 0 1 21 8.5v9a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 17.5z"/><circle cx="12" cy="13" r="3.6"/></svg>',
     download: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 10.5l5 5 5-5M5 20h14"/></svg>',
     share: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="18" cy="5.5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="18.5" r="2.5"/><path d="m8.2 10.8 7.6-4.1M8.2 13.2l7.6 4.1"/></svg>',
+    sheet: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="1.5"/><path d="M10 5v14M10 12h11"/></svg>',
     image: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="15" rx="2"/><circle cx="9" cy="10" r="1.8"/><path d="m4 17 5-4.5 4 3.5 3-2.5 4 3.5"/></svg>',
   };
 
@@ -591,6 +592,7 @@
             <div class="file-actions">
               <label class="btn small">${ICON.clip} Adicionar arquivo<input type="file" id="fileAdd" multiple hidden></label>
               <label class="btn small camera-btn">${ICON.camera} Tirar foto<input type="file" id="fileCam" accept="image/*" capture="environment" hidden></label>
+              <button type="button" class="btn small" data-act="plano-corte">${ICON.sheet} Anexar plano de corte</button>
             </div>
             <p class="files-hint">Foto do móvel pronto, PDF do plano de corte, projeto… Ficam guardados neste orçamento
               (não vão no PDF do cliente).<span class="drop-hint"> Também dá para arrastar arquivos para cá.</span></p>
@@ -889,6 +891,8 @@
         toast('Orçamento excluído');
         return true;
       }
+      case 'plano-corte': openPlano(); return true;
+      case 'plano-pick': pickPlano(btn); return true;
       case 'open-file': openFile(fileOf(btn)); return true;
       case 'share-file': shareFile(fileOf(btn)); return true;
       case 'del-file': {
@@ -1073,6 +1077,71 @@
     e.preventDefault();
     card.classList.remove('drag');
     addFiles([...e.dataTransfer.files]);
+  });
+
+  // ---------- Plano de corte do Otimizador ----------
+
+  let planoItens = [];
+
+  function planoMsg(text, isError) {
+    const p = $('#planoMsg');
+    p.textContent = text;
+    p.classList.toggle('error', !!isError);
+  }
+
+  async function openPlano() {
+    if (!editing) return;
+    const dlg = $('#dlgPlano');
+    $('#planoAbrirOtimizador').href = (window.APP_CONFIG || {}).otimizadorUrl || 'https://gabrielfbrandao9.github.io/otimizador-de-cortes/';
+    $('#planoLista').innerHTML = '<p class="vazio">Procurando projetos…</p>';
+    planoMsg('');
+    dlg.showModal();
+    PlanoCorte.loadLibs().catch(() => {}); // já vai baixando o Otimizador
+    planoItens = await PlanoCorte.listProjects(!!user);
+    const ONDE = { nuvem: 'na nuvem', aparelho: 'neste aparelho', atual: 'aberto no Otimizador' };
+    const quando = (t) => (isFinite(t) && t ? new Date(t).toLocaleDateString('pt-BR') : '');
+    $('#planoLista').innerHTML = planoItens.length
+      ? planoItens.map((p, i) => `<button type="button" class="plano-item" data-act="plano-pick" data-i="${i}">
+          ${ICON.sheet}<strong>${esc(p.nome)}</strong><small>${ONDE[p.fonte]}${quando(p.quando) ? ' · ' + quando(p.quando) : ''}</small></button>`).join('')
+      : `<p class="vazio">Nenhum projeto do Otimizador encontrado${user ? '' : ' neste aparelho. Entre na sua conta para ver os projetos salvos na nuvem'}.
+          Você também pode usar um arquivo .json exportado pelo Otimizador.</p>`;
+  }
+
+  async function attachPlano(getProject) {
+    const quote = editing;
+    if (!quote) return;
+    const botoes = $$('#dlgPlano button, #dlgPlano label.btn');
+    botoes.forEach((b) => { b.disabled = true; });
+    planoMsg('Calculando o plano de corte…');
+    try {
+      const project = await getProject();
+      const r = await PlanoCorte.buildPdf(project, {
+        empresa: getConfig().nome,
+        orcamento: `Nº ${pad3(quote.numero)}`,
+      });
+      await Anexos.add(quote.id, [r.file]);
+      $('#dlgPlano').close();
+      renderFiles();
+      toast(r.unplaced
+        ? `Plano anexado, mas ${r.unplaced === 1 ? '1 peça não coube' : `${r.unplaced} peças não couberam`} nas chapas do projeto.`
+        : `Plano de corte anexado: ${r.stats.sheetCount} ${r.stats.sheetCount === 1 ? 'chapa' : 'chapas'}.`, 6000);
+    } catch (err) {
+      console.error(err);
+      planoMsg('Não foi possível anexar: ' + err.message, true);
+    } finally {
+      botoes.forEach((b) => { b.disabled = false; });
+    }
+  }
+
+  function pickPlano(btn) {
+    const item = planoItens[+btn.dataset.i];
+    if (item) attachPlano(() => PlanoCorte.loadProject(item));
+  }
+
+  $('#planoArquivo').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    e.target.value = '';
+    if (file) attachPlano(() => PlanoCorte.projectFromFile(file));
   });
 
   // ---------- PDF ----------

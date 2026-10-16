@@ -29,6 +29,11 @@ Funciona no navegador, sem servidor próprio. É só HTML, CSS e JavaScript, com
   arquivo para o cartão. Fotos grandes são reduzidas automaticamente (até 2000 px). Os arquivos ficam
   no aparelho e sobem para a nuvem (Supabase Storage); em outro aparelho, são baixados ao abrir.
   Não entram no PDF do cliente.
+- **Anexar plano de corte**: no cartão "Arquivos", escolhe um projeto do
+  [Otimizador de Cortes](https://gabrielfbrandao9.github.io/otimizador-de-cortes/) (salvo na nuvem,
+  neste aparelho ou um `.json` exportado) e o app anexa um PDF com o resumo, a lista de peças e o
+  desenho de cada chapa. O plano é calculado com o próprio código publicado do Otimizador
+  (`js/optimizer.js` e `js/render.js`), então sai igual ao de lá; precisa de internet.
 - **Ocultar preços dos materiais no PDF**: chave no cartão "PDF para o cliente" de cada orçamento
   (e um padrão para orçamentos novos em Ajustes). O PDF lista os materiais e as quantidades sem
   preço unitário nem subtotal; o total de cada móvel e o resumo continuam. No app nada muda.
@@ -83,6 +88,7 @@ Ao adicionar um arquivo novo ao site, inclua-o na lista `APP_FILES` do `sw.js` e
 | `js/calc.js` | Cálculo do orçamento |
 | `js/pdf.js` | Geração do PDF (jsPDF + AutoTable) |
 | `js/files.js` | Arquivos dos orçamentos (aparelho e Supabase Storage) |
+| `js/plano.js` | PDF do plano de corte do Otimizador, para anexar |
 | `js/store.js` | Dados no aparelho e sincronização com a nuvem |
 | `js/cloud.js` | Login e acesso ao Supabase |
 | `js/logo.js` | Logo (usado no topo e no PDF) |

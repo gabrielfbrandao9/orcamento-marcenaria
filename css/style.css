@@ -654,6 +654,33 @@ input[type='search'] { padding-left: 34px; background: var(--surface) url("data:
 .viewer-head strong { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 15px; }
 .viewer img { display: block; max-width: 100%; max-height: calc(100vh - 100px); margin: 0 auto; object-fit: contain; }
 
+/* Anexar plano de corte */
+#dlgPlano { width: min(520px, calc(100vw - 24px)); }
+.plano-list { max-height: min(50vh, 380px); overflow-x: hidden; overflow-y: auto; border: 1px solid var(--line); border-radius: 10px; }
+.plano-list .vazio { margin: 0; padding: 14px; font-size: 14px; color: var(--muted); }
+.plano-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 0;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+}
+.plano-item + .plano-item { border-top: 1px solid var(--line); }
+.plano-item:hover { background: var(--surface-2); }
+.plano-item:disabled { opacity: 0.6; cursor: progress; }
+.plano-item svg { width: 20px; height: 20px; flex: none; fill: none; stroke: var(--wood); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.file-actions .btn svg { flex: none; }
+.plano-item strong { flex: 1; min-width: 0; font-weight: 500; font-size: 14.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.plano-item small { flex: none; font-size: 12px; color: var(--muted); }
+.plano-msg { margin: 10px 0 0; font-size: 13.5px; color: var(--muted); }
+.plano-msg:empty { display: none; }
+.plano-msg.error { color: var(--danger); }
+#dlgPlano .dlg-actions label.btn { cursor: pointer; }
+
 /* ---------- Catálogo e clientes ---------- */
 
 .group + .group { margin-top: 18px; }

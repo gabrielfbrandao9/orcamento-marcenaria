@@ -15,6 +15,9 @@ window.APP_CONFIG = {
   supabaseUrl: 'https://hvpafupdzqoochnlkfvp.supabase.co',
   supabaseKey: 'sb_publishable_gxZJWsTHWsg4tZkcIAnhCA_tQPPYppf',
 
+  // Otimizador de Cortes (usado para anexar o plano de corte aos orçamentos)
+  otimizadorUrl: 'https://gabrielfbrandao9.github.io/otimizador-de-cortes/',
+
   // Formas de login exibidas na tela "Entrar"
   loginGoogle: true,
   loginEmail: true,

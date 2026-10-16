@@ -8,7 +8,7 @@
  *
  * Ao mudar a lista de arquivos, aumente a versão para limpar o cache antigo.
  */
-const VERSION = 'v5';
+const VERSION = 'v6';
 const CACHE = `dier-${VERSION}`;
 
 const APP_FILES = [
@@ -23,6 +23,7 @@ const APP_FILES = [
   'js/logo.js',
   'js/pdf.js',
   'js/files.js',
+  'js/plano.js',
   'js/app.js',
   'icons/icon-192.png',
   'icons/icon-512.png',

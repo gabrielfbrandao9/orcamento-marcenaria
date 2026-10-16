@@ -108,6 +108,16 @@
       check(await client.rpc('equipe_sair'));
     },
 
+    // ---------- Projetos do Otimizador de Cortes (tabela "projects") ----------
+
+    async listCutProjects() {
+      return check(await client.from('projects').select('id, name, updated_at').order('updated_at', { ascending: false }));
+    },
+
+    async loadCutProject(id) {
+      return check(await client.from('projects').select('id, name, data').eq('id', id).single());
+    },
+
     // ---------- Arquivos (Supabase Storage) ----------
 
     async uploadFile(path, blob, contentType) {

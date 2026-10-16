@@ -223,6 +223,25 @@
     </form>
   </dialog>
 
+  <!-- Anexar o plano de corte do Otimizador -->
+  <dialog id="dlgPlano">
+    <form method="dialog" class="dlg">
+      <div class="dlg-head">
+        <h2>Anexar plano de corte</h2>
+        <button type="button" class="icon" value="cancel" aria-label="Fechar">×</button>
+      </div>
+      <p class="muted dlg-text">Escolha um projeto do Otimizador de Cortes. O app calcula o plano e anexa um PDF
+        com o desenho de cada chapa e a lista de peças.</p>
+      <div class="plano-list" id="planoLista"></div>
+      <p class="plano-msg" id="planoMsg" role="status"></p>
+      <div class="dlg-actions">
+        <label class="btn ghost">Usar um arquivo .json<input type="file" id="planoArquivo" accept=".json,application/json" hidden></label>
+        <span class="spacer"></span>
+        <a class="btn" id="planoAbrirOtimizador" target="_blank" rel="noopener">Abrir o Otimizador</a>
+      </div>
+    </form>
+  </dialog>
+
   <!-- Foto de um orçamento em tamanho grande -->
   <dialog id="dlgViewer" class="viewer">
     <div class="viewer-head">
@@ -246,6 +265,7 @@
   <script src="js/logo.js"></script>
   <script src="js/pdf.js"></script>
   <script src="js/files.js"></script>
+  <script src="js/plano.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>
