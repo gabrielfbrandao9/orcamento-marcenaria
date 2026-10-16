@@ -689,6 +689,20 @@ input[type='search'] { padding-left: 34px; background: var(--surface) url("data:
 .settings .field + .field, .settings .field-row, .settings .field-row + .field, .settings .field + .field-row { margin-top: 12px; }
 .settings .card p { font-size: 14px; }
 .settings .btn-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+
+.team-list { list-style: none; margin: 12px 0 0; padding: 0; border: 1px solid var(--line); border-radius: 10px; }
+.team-list li { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 8px 12px; font-size: 14px; }
+.team-list li + li { border-top: 1px solid var(--line); }
+.team-list .who { flex: 1 1 180px; min-width: 0; overflow-wrap: anywhere; }
+.team-list .tag { font-size: 12.5px; color: var(--muted); }
+.team-invite { display: flex; gap: 8px; margin-top: 12px; }
+.team-invite input { flex: 1; min-width: 0; }
+
+.choice { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; cursor: pointer; font-size: 14px; }
+.choice + .choice { margin-top: 8px; }
+.choice:has(input:checked) { border-color: var(--wood); background: var(--wood-soft); }
+.choice input { margin-top: 3px; accent-color: var(--wood); }
+.choice small { display: block; margin-top: 2px; color: var(--muted); font-size: 13px; }
 /* Campos lado a lado: alinhados pela caixa, mesmo se um rótulo quebrar linha */
 .field-row { align-items: end; }
 .settings .field-row > .field, .dlg .field-row > .field { margin-top: 0; }

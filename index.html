@@ -162,6 +162,23 @@
     </form>
   </dialog>
 
+  <!-- Convite para equipe -->
+  <dialog id="dlgConvite">
+    <form method="dialog" class="dlg" id="formConvite">
+      <div class="dlg-head">
+        <h2>Convite para equipe</h2>
+        <button type="button" class="icon" value="cancel" aria-label="Fechar">×</button>
+      </div>
+      <p class="dlg-text" id="conviteTexto"></p>
+      <div id="conviteOpcoes"></div>
+      <div class="dlg-actions">
+        <button class="btn ghost" type="button" id="conviteRecusar" data-act="team-decline">Recusar</button>
+        <span class="spacer"></span>
+        <button class="btn primary" value="ok">Entrar na equipe</button>
+      </div>
+    </form>
+  </dialog>
+
   <!-- Login -->
   <dialog id="dlgLogin">
     <form method="dialog" class="dlg">

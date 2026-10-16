@@ -7,6 +7,10 @@
  *   - na nuvem, no Supabase Storage, assim que a conta estiver conectada.
  * Em outro aparelho, o arquivo é baixado da nuvem na primeira vez que é aberto.
  * Fotos grandes são reduzidas antes de salvar.
+ *
+ * Na nuvem, cada arquivo fica na pasta do espaço (a equipe ou a conta). Quem
+ * entra numa equipe levando os dados tem os arquivos na pasta da própria conta,
+ * que só ela acessa: o app copia esses arquivos para a pasta da equipe.
  */
 (function (global) {
   'use strict';
@@ -144,7 +148,7 @@
       for (const a of Store.all('anexo').filter((x) => !x.path)) {
         const blob = await local.get(a.id).catch(() => null);
         if (!blob) continue; // foi adicionado em outro aparelho, que ainda vai enviar
-        const path = `${user.id}/${a.orcamentoId}/${a.id}${ext(a)}`;
+        const path = `${Store.espaco()}/${a.orcamentoId}/${a.id}${ext(a)}`;
         try {
           await Cloud.uploadFile(path, blob, a.tipo || 'application/octet-stream');
           bucketMissing = false;
@@ -162,7 +166,24 @@
         }
         emit();
       }
-      // 3. Tira do aparelho os arquivos que foram apagados em outro aparelho.
+      // 3. Leva para a pasta da equipe os arquivos que ainda estão na pasta da própria conta.
+      const espaco = Store.espaco();
+      if (!Store.semEquipes() && espaco && espaco !== user.id) {
+        for (const a of Store.all('anexo').filter((x) => x.path && x.path.startsWith(`${user.id}/`))) {
+          const novo = `${espaco}/${a.path.slice(user.id.length + 1)}`;
+          try {
+            const blob = await local.get(a.id).catch(() => null) || await Cloud.downloadFile(a.path);
+            await Cloud.uploadFile(novo, blob, a.tipo || 'application/octet-stream');
+            const atual = Store.get(a.id);
+            if (atual) Store.put('anexo', { ...atual, path: novo });
+            else queueDelete(novo);
+            queueDelete(a.path);
+          } catch (err) {
+            console.error(err); // tenta de novo na próxima vez
+          }
+        }
+      }
+      // 4. Tira do aparelho os arquivos que foram apagados em outro aparelho.
       const ids = new Set(Store.all('anexo').map((x) => x.id));
       const keys = await local.keys().catch(() => []);
       for (const k of keys) if (!ids.has(k)) await local.del(k).catch(() => {});

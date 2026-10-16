@@ -42,6 +42,9 @@ Funciona no navegador, sem servidor próprio. É só HTML, CSS e JavaScript, com
   Os orçamentos já feitos guardam o preço da época e não mudam.
 - **Modo claro e escuro**: botão ☀/☾ no topo, ou em **Ajustes → Aparência** (Automático segue o
   tema do celular ou do computador).
+- **Equipe**: em **Ajustes → Equipe**, convide outras pessoas pelo e-mail. Todos da equipe veem e
+  alteram os mesmos orçamentos, clientes, materiais e ajustes; só quem convida (o dono) adiciona e
+  remove pessoas. Veja [SUPABASE.md](SUPABASE.md#3-equipe-mais-de-uma-conta-com-os-mesmos-dados).
 - **Ajustes**: dados da marcenaria (saem no PDF), valores padrão para orçamentos novos
   (mão de obra, desconto, parcelas, juros, condições de pagamento), conta e
   **cópia de segurança** (baixar e restaurar um arquivo `.json`).
@@ -51,6 +54,7 @@ Funciona no navegador, sem servidor próprio. É só HTML, CSS e JavaScript, com
 Tudo é salvo **primeiro no aparelho** (funciona sem internet) e, com a conta conectada,
 enviado para a **nuvem** (Supabase). Ao abrir o app em outro aparelho com a mesma conta, os dados
 aparecem lá. Se o mesmo item for alterado em dois aparelhos, vale a alteração mais recente.
+Numa **equipe**, os dados são de todos da equipe, e não de uma conta só.
 
 O login e o projeto Supabase são **os mesmos do Otimizador de Cortes**. Para ligar a nuvem, é preciso
 criar a tabela uma vez: veja [SUPABASE.md](SUPABASE.md).
@@ -77,7 +81,7 @@ Ao adicionar um arquivo novo ao site, inclua-o na lista `APP_FILES` do `sw.js` e
 | `js/cloud.js` | Login e acesso ao Supabase |
 | `js/logo.js` | Logo (usado no topo e no PDF) |
 | `js/config.js` | Endereço e chave pública do Supabase |
-| `supabase/schema.sql` | Tabela, bucket de arquivos e regras de segurança no Supabase |
+| `supabase/schema.sql` | Tabelas, equipe, bucket de arquivos e regras de segurança no Supabase |
 | `sw.js`, `manifest.webmanifest`, `icons/` | App instalável e funcionamento offline |
 
 ## Testar no computador
