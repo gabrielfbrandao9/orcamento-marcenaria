@@ -29,6 +29,9 @@ Funciona no navegador, sem servidor próprio. É só HTML, CSS e JavaScript, com
   arquivo para o cartão. Fotos grandes são reduzidas automaticamente (até 2000 px). Os arquivos ficam
   no aparelho e sobem para a nuvem (Supabase Storage); em outro aparelho, são baixados ao abrir.
   Não entram no PDF do cliente.
+- **Ocultar preços dos materiais no PDF**: chave no cartão "PDF para o cliente" de cada orçamento
+  (e um padrão para orçamentos novos em Ajustes). O PDF lista os materiais e as quantidades sem
+  preço unitário nem subtotal; o total de cada móvel e o resumo continuam. No app nada muda.
 - **PDF para o cliente**: tudo detalhado (materiais de cada móvel linha a linha, mão de obra,
   frete, instalação, total, à vista e parcelado) com o logo, os dados da marcenaria e as
   condições de pagamento. No celular, o botão **Enviar PDF** abre o compartilhamento do Android

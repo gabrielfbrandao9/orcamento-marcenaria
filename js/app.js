@@ -47,6 +47,7 @@
     parcelasMax: 10,
     jurosPct: 0,
     condicoes: '50% de entrada na aprovação do orçamento e 50% na entrega.\nPix, dinheiro ou cartão.',
+    ocultarPrecosPadrao: false, // orçamentos novos já com os preços dos materiais ocultos no PDF
   };
 
   // Materiais sugeridos para o catálogo (preços de custo de referência: confira e ajuste).
@@ -284,7 +285,7 @@
       numero: 0, data: today(), status: 'pendente', clienteId: '', clienteNome: '', titulo: '',
       maoDeObraPct: cfg.maoDeObraPct, margemPct: 0, frete: 0, instalacao: 0,
       descontoVistaPct: cfg.descontoVistaPct, parcelasMax: cfg.parcelasMax, jurosPct: cfg.jurosPct,
-      condicoes: '', observacoes: '', ...q,
+      condicoes: '', observacoes: '', ocultarPrecos: false, ...q,
     };
     if (!STATUS_LABEL[out.status]) out.status = 'pendente';
     out.moveis = (q.moveis || []).map((m) => ({
@@ -461,6 +462,7 @@
       clienteNome: c ? c.nome : '',
       moveis: [newMovel()],
       condicoes: cfg.condicoes,
+      ocultarPrecos: !!cfg.ocultarPrecosPadrao,
       criadoEm: Date.now(),
     }));
     location.hash = '#/orcamento/' + q.id;
@@ -611,6 +613,11 @@
           </section>
           <section class="card">
             <div class="card-head"><h3>PDF para o cliente</h3></div>
+            <label class="check">
+              <input type="checkbox" data-f="ocultarPrecos"${q.ocultarPrecos ? ' checked' : ''}>
+              <span>Ocultar os preços dos materiais no PDF
+                <small>O cliente vê os materiais e as quantidades, sem preço unitário nem subtotal. Aqui no app os preços continuam aparecendo.</small></span>
+            </label>
             <div class="pdf-actions">
               ${share ? `<button type="button" class="btn primary" data-act="pdf-share">Enviar PDF</button>` : `<button type="button" class="btn primary" data-act="pdf-download">Baixar PDF</button>`}
               <button type="button" class="btn" data-act="pdf-open">Ver / imprimir</button>
@@ -769,7 +776,7 @@
     if (t.tagName === 'SELECT') return; // tratado no "change"
     if (t.dataset.f) {
       const f = t.dataset.f;
-      editing[f] = NUM_FIELDS.includes(f) ? parseNum(t.value) : t.value;
+      editing[f] = t.type === 'checkbox' ? t.checked : NUM_FIELDS.includes(f) ? parseNum(t.value) : t.value;
     } else if (t.dataset.mf) {
       const m = findMovel(t);
       if (!m) return;
@@ -1437,6 +1444,11 @@
           <div class="field-row">${cfgField('maoDeObraPct', 'Mão de obra (% dos materiais)', { kind: 'pct' })}${cfgField('descontoVistaPct', 'Desconto à vista', { kind: 'pct' })}</div>
           <div class="field-row">${cfgField('parcelasMax', 'Parcelas (até)', { kind: 'int' })}${cfgField('jurosPct', 'Juros ao mês (0 = sem juros)', { kind: 'pct' })}</div>
           ${cfgField('condicoes', 'Condições de pagamento', { textarea: true })}
+          <label class="check" style="margin-top:12px">
+            <input type="checkbox" data-c="ocultarPrecosPadrao"${cfgDraft.ocultarPrecosPadrao ? ' checked' : ''}>
+            <span>Orçamentos novos já com os preços dos materiais ocultos no PDF
+              <small>Em cada orçamento dá para ligar ou desligar, no cartão “PDF para o cliente”.</small></span>
+          </label>
         </section>
         <section class="card">
           <div class="card-head"><h3>Aparência</h3></div>
@@ -1615,7 +1627,7 @@
 
   function onConfigInput(t) {
     const k = t.dataset.c;
-    cfgDraft[k] = t.inputMode === 'decimal' || t.inputMode === 'numeric' ? parseNum(t.value) : t.value;
+    cfgDraft[k] = t.type === 'checkbox' ? t.checked : t.inputMode === 'decimal' || t.inputMode === 'numeric' ? parseNum(t.value) : t.value;
     clearTimeout(cfgTimer);
     cfgTimer = setTimeout(flushConfig, 500);
   }

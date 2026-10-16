@@ -4,6 +4,8 @@
  * Mostra tudo detalhado: os materiais de cada móvel, linha a linha, e o resumo
  * com materiais, mão de obra, frete, instalação, total,
  * valor à vista e parcelado, além das condições de pagamento.
+ * Com "ocultar preços" ligado no orçamento, as linhas de material saem sem
+ * preço unitário e subtotal (o total de cada móvel e o resumo continuam).
  *
  * As fontes padrão do PDF só têm caracteres do português "comum": evite
  * símbolos como − ou … nos textos fixos.
@@ -154,36 +156,49 @@
       }
       y += 0.5;
 
+      // Com "ocultar preços" ligado, as linhas saem sem preço unitário e subtotal;
+      // a última coluna (sem título) fica só para o total do móvel.
+      const oculto = !!q.ocultarPrecos;
+      const cols = oculto ? 4 : 5;
       const itens = (m.itens || []).filter((it) => it.nome || it.qtd || it.preco);
-      const body = itens.map((it) => [
-        clean(it.nome || 'Material'),
-        num(it.qtd),
-        clean(it.unidade || ''),
-        money(it.preco),
-        money(global.Calc.itemTotal(it)),
-      ]);
-      if (!body.length) body.push([{ content: 'Nenhum material informado', colSpan: 5, styles: { textColor: MUTED, fontStyle: 'italic' } }]);
+      const body = itens.map((it) => (oculto
+        ? [clean(it.nome || 'Material'), num(it.qtd), clean(it.unidade || ''), '']
+        : [
+          clean(it.nome || 'Material'),
+          num(it.qtd),
+          clean(it.unidade || ''),
+          money(it.preco),
+          money(global.Calc.itemTotal(it)),
+        ]));
+      if (!body.length) body.push([{ content: 'Nenhum material informado', colSpan: cols, styles: { textColor: MUTED, fontStyle: 'italic' } }]);
       const foot = mc.qtd > 1
         ? [
-          [{ content: 'Subtotal por unidade', colSpan: 4, styles: { halign: 'right', fontStyle: 'normal', textColor: MUTED } }, money(mc.unit)],
-          [{ content: `Total do móvel (${mc.qtd} unidades)`, colSpan: 4, styles: { halign: 'right' } }, money(mc.total)],
+          [{ content: 'Subtotal por unidade', colSpan: cols - 1, styles: { halign: 'right', fontStyle: 'normal', textColor: MUTED } }, money(mc.unit)],
+          [{ content: `Total do móvel (${mc.qtd} unidades)`, colSpan: cols - 1, styles: { halign: 'right' } }, money(mc.total)],
         ]
-        : [[{ content: 'Total do móvel', colSpan: 4, styles: { halign: 'right' } }, money(mc.total)]];
+        : [[{ content: 'Total do móvel', colSpan: cols - 1, styles: { halign: 'right' } }, money(mc.total)]];
 
       doc.autoTable({
         ...tableBase,
         startY: y,
-        head: [['Material', 'Qtd', 'Unid.', 'Preço un.', 'Subtotal']],
+        head: [oculto ? ['Material', 'Qtd', 'Unid.', ''] : ['Material', 'Qtd', 'Unid.', 'Preço un.', 'Subtotal']],
         body,
         foot,
         showFoot: 'lastPage',
-        columnStyles: {
-          0: { cellWidth: 'auto' },
-          1: { halign: 'right', cellWidth: 16 },
-          2: { cellWidth: 16 },
-          3: { halign: 'right', cellWidth: 28 },
-          4: { halign: 'right', cellWidth: 30 },
-        },
+        columnStyles: oculto
+          ? {
+            0: { cellWidth: 'auto' },
+            1: { halign: 'right', cellWidth: 16 },
+            2: { cellWidth: 16 },
+            3: { halign: 'right', cellWidth: 30 },
+          }
+          : {
+            0: { cellWidth: 'auto' },
+            1: { halign: 'right', cellWidth: 16 },
+            2: { cellWidth: 16 },
+            3: { halign: 'right', cellWidth: 28 },
+            4: { halign: 'right', cellWidth: 30 },
+          },
         didParseCell: (d) => {
           if (d.section === 'head' && d.column.index !== 0 && d.column.index !== 2) d.cell.styles.halign = 'right';
           if (d.section === 'body') d.cell.styles.lineWidth = { bottom: 0.2 };
