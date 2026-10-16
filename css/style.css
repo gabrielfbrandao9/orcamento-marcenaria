@@ -917,3 +917,12 @@ dialog::backdrop { background: rgba(20, 15, 10, 0.45); }
 @media (max-width: 380px) {
   .brand-text small { display: none; }
 }
+
+/* Celulares bem estreitos (320 px): tudo um pouco mais junto para o topo caber */
+@media (max-width: 360px) {
+  .topbar { padding: 8px 10px; gap: 7px; }
+  .brand { gap: 7px; }
+  .logo { width: 30px; height: 30px; }
+  .brand-text strong { font-size: 15.5px; }
+  .top-right { gap: 5px; }
+}
