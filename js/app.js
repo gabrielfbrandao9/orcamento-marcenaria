@@ -1098,7 +1098,7 @@
     dlg.showModal();
     PlanoCorte.loadLibs().catch(() => {}); // já vai baixando o Otimizador
     planoItens = await PlanoCorte.listProjects(!!user);
-    const ONDE = { nuvem: 'na nuvem', aparelho: 'neste aparelho', atual: 'aberto no Otimizador' };
+    const ONDE = { nuvem: 'na nuvem', aparelho: 'neste aparelho', antigo: 'neste aparelho', atual: 'aberto no Otimizador' };
     const quando = (t) => (isFinite(t) && t ? new Date(t).toLocaleDateString('pt-BR') : '');
     $('#planoLista').innerHTML = planoItens.length
       ? planoItens.map((p, i) => `<button type="button" class="plano-item" data-act="plano-pick" data-i="${i}">

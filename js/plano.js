@@ -7,7 +7,8 @@
  *
  * Os projetos vêm de três lugares:
  *   - nuvem: tabela "projects" do Supabase (mesma conta do Otimizador);
- *   - aparelho: projetos salvos no navegador pelo Otimizador (mesmo endereço do site);
+ *   - aparelho: projetos salvos no navegador pelo Otimizador (mesmo endereço do site;
+ *     "otimizador:db" desde o salvamento automático, "otimizador:projetos" antes);
  *   - arquivo .json exportado pelo Otimizador.
  */
 (function (global) {
@@ -65,12 +66,19 @@
         console.error(e);
       }
     }
-    const salvos = readLocal('otimizador:projetos', {});
+    const nuvem = new Set(out.map((p) => p.id));
+    const db = readLocal('otimizador:db', null);
+    const locais = (db && db.projects) || {};
+    Object.values(locais).forEach((p) => {
+      if (!p || p.excluido || nuvem.has(p.id) || !isProject(p.data)) return;
+      out.push({ fonte: 'aparelho', id: p.id, nome: p.name || 'Projeto sem nome', quando: p.alterado_em || 0 });
+    });
+    const salvos = readLocal('otimizador:projetos', {}); // formato antigo
     Object.keys(salvos).forEach((nome) => {
-      if (isProject(salvos[nome] && salvos[nome].state)) out.push({ fonte: 'aparelho', id: nome, nome, quando: salvos[nome].savedAt || 0 });
+      if (isProject(salvos[nome] && salvos[nome].state)) out.push({ fonte: 'antigo', id: nome, nome, quando: salvos[nome].savedAt || 0 });
     });
     const atual = readLocal('otimizador:atual', null);
-    if (isProject(atual) && atual.pieces.some((p) => +p.length > 0 && +p.width > 0)) {
+    if (isProject(atual) && !locais[atual.id] && !nuvem.has(atual.id) && atual.pieces.some((p) => +p.length > 0 && +p.width > 0)) {
       out.push({ fonte: 'atual', id: 'atual', nome: atual.name || 'Projeto sem nome', quando: Infinity });
     }
     return out.sort((a, b) => b.quando - a.quando);
@@ -79,7 +87,10 @@
   async function loadProject(item) {
     let data = null;
     if (item.fonte === 'nuvem') data = (await Cloud.loadCutProject(item.id)).data;
-    else if (item.fonte === 'aparelho') data = (readLocal('otimizador:projetos', {})[item.id] || {}).state;
+    else if (item.fonte === 'aparelho') {
+      const p = ((readLocal('otimizador:db', null) || {}).projects || {})[item.id];
+      data = p && p.data ? { ...p.data, name: p.name } : null;
+    } else if (item.fonte === 'antigo') data = (readLocal('otimizador:projetos', {})[item.id] || {}).state;
     else if (item.fonte === 'atual') data = readLocal('otimizador:atual', null);
     if (!isProject(data)) throw new Error('o projeto está vazio ou não é do Otimizador de Cortes');
     return { ...data, name: data.name || item.nome };
@@ -212,7 +223,6 @@
       ['Chapas', String(st.sheetCount)],
       ['Peças', `${st.partsPlaced} de ${st.partsTotal}`],
       ['Aproveitamento', `${nf(st.efficiency * 100, 1)}%`],
-      ['Fita de borda', `${nf(st.edgeLength / 1000, 2)} m`],
       ['Cortes', `${st.cutCount} (${nf(st.cutLength / 1000, 2)} m)`],
       ['Serra / refilo', `${nf(project.kerf, 1)} / ${nf(project.trim, 1)} ${unit}`],
     ];
@@ -242,21 +252,16 @@
       return s ? s.name : 'Qualquer';
     };
     const veio = { length: 'Comprimento', width: 'Largura' };
-    const fita = (e) => {
-      if (!e) return '-';
-      const n = ['c1', 'c2', 'l1', 'l2'].filter((k) => e[k]).length;
-      return n ? `${n} ${n === 1 ? 'lado' : 'lados'}` : '-';
-    };
     font('bold', 10.5);
     color(INK);
     doc.text('Peças', M, y);
     doc.autoTable({
       ...tableBase,
       startY: y + 2,
-      head: [['Peça', 'Comprimento', 'Largura', 'Qtd', 'Chapa', 'Veio', 'Fita de borda']],
+      head: [['Peça', 'Comprimento', 'Largura', 'Qtd', 'Chapa', 'Veio']],
       body: pieces.filter((p) => p.enabled !== false && +p.length > 0 && +p.width > 0 && +p.qty > 0).map((p) => [
         clean(p.name || 'Peça'), `${nf(p.length, +p.length % 1 ? 1 : 0)} ${unit}`, `${nf(p.width, +p.width % 1 ? 1 : 0)} ${unit}`,
-        String(p.qty), clean(stockName(p.stock)), veio[p.grain] || 'Livre', fita(p.edges),
+        String(p.qty), clean(stockName(p.stock)), veio[p.grain] || 'Livre',
       ]),
       columnStyles: { 1: { halign: 'right' }, 2: { halign: 'right' }, 3: { halign: 'right', cellWidth: 12 } },
       didDrawPage: (d) => { if (d.pageNumber > 1) header('Peças (continuação)'); },
@@ -264,7 +269,7 @@
 
     // ---------- Uma página por desenho de chapa ----------
     const grupos = groupSheets(result.sheets);
-    const vista = { showLabels: true, showEdges: true, showOffcuts: true, showOrder: false, fontScale: 1, mono: false, vertical: false, unit };
+    const vista = { showLabels: true, showOffcuts: true, showOrder: false, fontScale: 1, mono: false, vertical: false, unit };
     for (let gi = 0; gi < grupos.length; gi++) {
       const g = grupos[gi];
       doc.addPage();
