@@ -49,29 +49,122 @@
     condicoes: '50% de entrada na aprovação do orçamento e 50% na entrega.\nPix, dinheiro ou cartão.',
   };
 
-  // Lista inicial opcional do catálogo (preços de referência: confira e ajuste).
+  // Materiais sugeridos para o catálogo (preços de custo de referência: confira e ajuste).
+  // Chapas: 2,75 x 1,85 m, a não ser quando indicado.
   const EXEMPLOS = [
+    // Chapas
     ['MDF Branco TX 15 mm (2,75 x 1,85 m)', 'Chapas', 'chapa', 289],
     ['MDF Branco TX 18 mm (2,75 x 1,85 m)', 'Chapas', 'chapa', 339],
-    ['MDF Amadeirado 15 mm (2,75 x 1,85 m)', 'Chapas', 'chapa', 389],
+    ['MDF Branco TX 25 mm (2,75 x 1,85 m)', 'Chapas', 'chapa', 489],
+    ['MDF Branco 9 mm (2,75 x 1,85 m)', 'Chapas', 'chapa', 199],
     ['MDF Branco 6 mm (2,75 x 1,85 m)', 'Chapas', 'chapa', 145],
+    ['MDF Amadeirado 15 mm (2,75 x 1,85 m)', 'Chapas', 'chapa', 389],
+    ['MDF Amadeirado 18 mm (2,75 x 1,85 m)', 'Chapas', 'chapa', 449],
+    ['MDF Amadeirado 6 mm (2,75 x 1,85 m)', 'Chapas', 'chapa', 219],
+    ['MDF Preto TX 15 mm (2,75 x 1,85 m)', 'Chapas', 'chapa', 419],
+    ['MDF Grafite 15 mm (2,75 x 1,85 m)', 'Chapas', 'chapa', 419],
+    ['MDF Cru 15 mm (2,75 x 1,85 m)', 'Chapas', 'chapa', 229],
+    ['MDF Cru 18 mm (2,75 x 1,85 m)', 'Chapas', 'chapa', 269],
+    ['MDP Branco 15 mm (2,75 x 1,85 m)', 'Chapas', 'chapa', 199],
+    ['MDP Branco 18 mm (2,75 x 1,85 m)', 'Chapas', 'chapa', 239],
+    ['Compensado naval 15 mm (2,20 x 1,60 m)', 'Chapas', 'chapa', 259],
     ['Fundo HDF Branco 3 mm (2,75 x 1,85 m)', 'Chapas', 'chapa', 79],
+    ['Fundo HDF Amadeirado 3 mm (2,75 x 1,85 m)', 'Chapas', 'chapa', 99],
+    // Fitas de borda
     ['Fita de borda branca 22 mm', 'Fitas de borda', 'm', 0.9],
+    ['Fita de borda branca 35 mm', 'Fitas de borda', 'm', 1.4],
     ['Fita de borda amadeirada 22 mm', 'Fitas de borda', 'm', 1.6],
+    ['Fita de borda amadeirada 35 mm', 'Fitas de borda', 'm', 2.2],
+    ['Fita de borda preta 22 mm', 'Fitas de borda', 'm', 1.3],
+    ['Fita de borda grafite 22 mm', 'Fitas de borda', 'm', 1.3],
+    // Dobradiças
     ['Dobradiça curva 35 mm com amortecedor', 'Dobradiças', 'un', 9.9],
     ['Dobradiça reta 35 mm com amortecedor', 'Dobradiças', 'un', 9.9],
+    ['Dobradiça supercurva 35 mm com amortecedor', 'Dobradiças', 'un', 10.9],
+    ['Dobradiça curva 35 mm sem amortecedor', 'Dobradiças', 'un', 4.5],
+    ['Dobradiça 165° para canto 35 mm', 'Dobradiças', 'un', 29],
+    ['Dobradiça para porta de vidro', 'Dobradiças', 'un', 18],
+    // Corrediças
+    ['Corrediça telescópica 30 cm', 'Corrediças', 'par', 25],
+    ['Corrediça telescópica 35 cm', 'Corrediças', 'par', 27],
+    ['Corrediça telescópica 40 cm', 'Corrediças', 'par', 29],
     ['Corrediça telescópica 45 cm', 'Corrediças', 'par', 32],
     ['Corrediça telescópica 50 cm', 'Corrediças', 'par', 36],
+    ['Corrediça telescópica 55 cm', 'Corrediças', 'par', 39],
+    ['Corrediça telescópica com amortecedor 45 cm', 'Corrediças', 'par', 69],
+    ['Corrediça oculta com amortecedor 45 cm', 'Corrediças', 'par', 145],
+    // Puxadores
     ['Puxador perfil alumínio', 'Puxadores', 'm', 35],
+    ['Puxador perfil preto', 'Puxadores', 'm', 39],
+    ['Puxador cava alumínio', 'Puxadores', 'm', 42],
+    ['Puxador alça 96 mm', 'Puxadores', 'un', 10],
     ['Puxador alça 128 mm', 'Puxadores', 'un', 12],
+    ['Puxador alça 160 mm', 'Puxadores', 'un', 15],
+    ['Puxador alça 256 mm', 'Puxadores', 'un', 22],
+    ['Puxador botão', 'Puxadores', 'un', 6],
+    // Ferragens
     ['Pé regulável plástico', 'Ferragens', 'un', 3.5],
+    ['Pé de alumínio para balcão 10 cm', 'Ferragens', 'un', 18],
+    ['Rodízio com freio 50 mm', 'Ferragens', 'un', 9],
     ['Suporte de prateleira (pino)', 'Ferragens', 'un', 0.3],
+    ['Suporte de prateleira invisível', 'Ferragens', 'un', 12],
+    ['Mão-francesa 20 cm', 'Ferragens', 'un', 8],
+    ['Pistão a gás 80 N (porta basculante)', 'Ferragens', 'un', 14],
+    ['Fecho toque (push)', 'Ferragens', 'un', 6],
+    ['Fechadura para gaveta', 'Ferragens', 'un', 15],
+    ['Kit trilho e roldanas para 2 portas de correr', 'Ferragens', 'un', 160],
+    // Fixação e colas
+    ['Parafuso 4,0 x 16 mm (caixa com 500)', 'Fixação e colas', 'cx', 22],
     ['Parafuso 4,0 x 40 mm (caixa com 100)', 'Fixação e colas', 'cx', 18],
+    ['Parafuso 4,0 x 50 mm (caixa com 100)', 'Fixação e colas', 'cx', 22],
+    ['Minifix com tambor 15 mm (caixa com 100)', 'Fixação e colas', 'cx', 55],
+    ['Cavilha 8 x 30 mm (pacote com 100)', 'Fixação e colas', 'cx', 12],
+    ['Bucha 6 mm com parafuso (caixa com 100)', 'Fixação e colas', 'cx', 15],
     ['Cola branca PVA', 'Fixação e colas', 'kg', 24],
+    ['Cola de contato', 'Fixação e colas', 'L', 45],
+    ['Cola hot melt para fita de borda', 'Fixação e colas', 'kg', 38],
+    ['Silicone transparente (tubo 280 g)', 'Fixação e colas', 'un', 22],
+    ['Fita dupla face (rolo)', 'Fixação e colas', 'un', 18],
+    // Vidros e espelhos
     ['Espelho 4 mm', 'Vidros e espelhos', 'm²', 180],
+    ['Espelho bisotado 4 mm', 'Vidros e espelhos', 'm²', 250],
+    ['Vidro incolor 4 mm', 'Vidros e espelhos', 'm²', 120],
+    ['Vidro fumê 4 mm', 'Vidros e espelhos', 'm²', 170],
+    ['Vidro canelado 4 mm', 'Vidros e espelhos', 'm²', 190],
+    ['Vidro temperado 8 mm', 'Vidros e espelhos', 'm²', 320],
+    // Iluminação
     ['Fita de LED 12 V (luz quente)', 'Iluminação', 'm', 15],
+    ['Fita de LED 12 V (luz fria)', 'Iluminação', 'm', 15],
+    ['Perfil de alumínio para LED com difusor', 'Iluminação', 'm', 25],
+    ['Fonte 12 V 5 A', 'Iluminação', 'un', 45],
+    ['Spot LED de embutir para móvel', 'Iluminação', 'un', 22],
+    ['Sensor de porta para LED', 'Iluminação', 'un', 35],
+    // Tintas e acabamentos
     ['Verniz PU', 'Tintas e acabamentos', 'L', 65],
+    ['Seladora para madeira', 'Tintas e acabamentos', 'L', 45],
+    ['Laca PU branca', 'Tintas e acabamentos', 'L', 120],
+    ['Thinner', 'Tintas e acabamentos', 'L', 28],
+    ['Massa para madeira', 'Tintas e acabamentos', 'un', 25],
+    ['Lixa para madeira (folha)', 'Tintas e acabamentos', 'un', 2.5],
+    // Acessórios
     ['Cabideiro oval alumínio', 'Acessórios', 'm', 28],
+    ['Suporte para cabideiro', 'Acessórios', 'par', 8],
+    ['Sapateira aramada', 'Acessórios', 'un', 85],
+    ['Cesto aramado deslizante', 'Acessórios', 'un', 120],
+    ['Calceiro deslizante', 'Acessórios', 'un', 230],
+    ['Porta-talheres para gaveta', 'Acessórios', 'un', 45],
+    ['Lixeira embutida', 'Acessórios', 'un', 180],
+    ['Passa-fio 60 mm', 'Acessórios', 'un', 6],
+    ['Tapa-furo adesivo (cartela)', 'Acessórios', 'un', 4],
+    // Serviços terceirizados
+    ['Corte de chapa (por chapa)', 'Serviços terceirizados', 'chapa', 25],
+    ['Colagem de fita de borda (por metro)', 'Serviços terceirizados', 'm', 2.5],
+    ['Laqueação', 'Serviços terceirizados', 'm²', 180],
+    ['Pintura com pistola', 'Serviços terceirizados', 'm²', 90],
+    ['Entrega do fornecedor', 'Serviços terceirizados', 'serviço', 60],
+    // Outros
+    ['Tampo de granito (fornecedor)', 'Outros', 'm²', 650],
+    ['Plástico bolha para proteção (rolo)', 'Outros', 'un', 35],
   ];
 
   const NUM_FIELDS = ['maoDeObraPct', 'margemPct', 'frete', 'instalacao', 'descontoVistaPct', 'parcelasMax', 'jurosPct'];
@@ -1153,6 +1246,51 @@
 
   // ---------- Catálogo ----------
 
+  // Materiais sugeridos que ainda não estão no catálogo (comparando pelo nome).
+  function missingSuggestions() {
+    const have = new Set(Store.all('material').map((m) => norm(m.nome).trim()));
+    return EXEMPLOS.filter(([nome]) => !have.has(norm(nome)));
+  }
+
+  function openSugestoes() {
+    const falta = missingSuggestions();
+    if (!falta.length) {
+      toast('Todos os materiais sugeridos já estão no catálogo.');
+      return;
+    }
+    const dlg = $('#dlgSugestoes');
+    const porCat = CATEGORIAS.map((cat) => [cat, falta.filter((m) => m[1] === cat)]).filter(([, l]) => l.length);
+    $('#sugestoesLista').innerHTML = porCat.map(([cat, l]) => `<label class="sug-cat">
+        <input type="checkbox" name="cat" value="${esc(cat)}" checked>
+        <span><strong>${esc(cat)}</strong> <span class="n">${l.length}</span>
+          <small>${esc(l.map((m) => m[0]).join(' · '))}</small></span>
+      </label>`).join('');
+    const f = $('#formSugestoes');
+    const total = () => {
+      const cats = $$('input[name="cat"]:checked', f).map((c) => c.value);
+      const n = falta.filter((m) => cats.includes(m[1])).length;
+      $('#sugestoesOk').textContent = n ? `Adicionar ${n} ${n === 1 ? 'material' : 'materiais'}` : 'Adicionar';
+      $('#sugestoesOk').disabled = !n;
+      return cats;
+    };
+    f.onchange = total;
+    $('#sugestoesTodas').onclick = () => {
+      const boxes = $$('input[name="cat"]', f);
+      const marcar = boxes.some((c) => !c.checked);
+      boxes.forEach((c) => { c.checked = marcar; });
+      total();
+    };
+    total();
+    openDialog(dlg, () => {
+      const cats = total();
+      const novos = falta.filter((m) => cats.includes(m[1])).map(([nome, categoria, unidade, preco]) => ({ nome, categoria, unidade, preco }));
+      if (!novos.length) return null;
+      Store.putMany('material', novos);
+      toast(`${novos.length} ${novos.length === 1 ? 'material adicionado' : 'materiais adicionados'}. Os preços são de referência: confira e ajuste.`, 6000);
+      return novos;
+    }).then((r) => { if (r && current.name === 'catalogo') renderCatalog(); });
+  }
+
   function renderCatalog() {
     const mats = materials();
     const f = filters.catalogo;
@@ -1170,10 +1308,12 @@
         <div class="chips">${chip('cat', '', 'Todos', mats.length, !f.cat)}${CATEGORIAS.filter((c) => counts[c]).map((c) => chip('cat', c, c, counts[c], f.cat === c)).join('')}</div>
         <div id="results"></div>
         <p class="muted" style="font-size:13px;margin-top:16px">Preços de custo. Ao mudar um preço aqui, os orçamentos antigos não mudam;
-          num orçamento aberto aparece o botão “Usar preços do catálogo”.</p>`
+          num orçamento aberto aparece o botão “Usar preços do catálogo”.</p>
+        ${missingSuggestions().length ? `<div class="suggest"><span>Faltam ${missingSuggestions().length} materiais da lista de sugestões.</span>
+          <button type="button" class="btn small" data-act="seed-materials">Ver materiais sugeridos</button></div>` : ''}`
       : `<div class="empty"><strong>Catálogo vazio</strong>
           <p>Cadastre as chapas, fitas de borda, ferragens e outros materiais com o <strong>preço de custo</strong>. Nos orçamentos, é só escolher e informar a quantidade.</p>
-          <button type="button" class="btn primary" data-act="new-material">${ICON.plus} Novo material</button><button type="button" class="btn" data-act="seed-materials">Começar com uma lista de exemplo</button></div>`}`;
+          <button type="button" class="btn primary" data-act="new-material">${ICON.plus} Novo material</button><button type="button" class="btn" data-act="seed-materials">Escolher materiais sugeridos</button></div>`}`;
     if (mats.length) fillCatalog(mats);
   }
 
@@ -1569,12 +1709,7 @@
         if (r && current.name === 'catalogo') renderCatalog();
         return;
       }
-      case 'seed-materials': {
-        Store.putMany('material', EXEMPLOS.map(([nome, categoria, unidade, preco]) => ({ nome, categoria, unidade, preco })));
-        renderCatalog();
-        toast('Lista de exemplo adicionada. Confira e ajuste os preços de cada item.', 5000);
-        return;
-      }
+      case 'seed-materials': return openSugestoes();
       case 'reajuste': return openReajuste();
       case 'new-client':
       case 'edit-client': {

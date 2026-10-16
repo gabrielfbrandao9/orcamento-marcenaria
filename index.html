@@ -134,6 +134,25 @@
     </form>
   </dialog>
 
+  <!-- Materiais sugeridos para o catálogo -->
+  <dialog id="dlgSugestoes">
+    <form method="dialog" class="dlg" id="formSugestoes">
+      <div class="dlg-head">
+        <h2>Materiais sugeridos</h2>
+        <button type="button" class="icon" value="cancel" aria-label="Fechar">×</button>
+      </div>
+      <p class="muted dlg-text">Escolha as categorias. Só entram os materiais que ainda não estão no catálogo.
+        Os preços são de referência: depois, confira e ajuste cada um.</p>
+      <div class="sug-list" id="sugestoesLista"></div>
+      <div class="dlg-actions">
+        <button type="button" class="btn ghost" id="sugestoesTodas">Marcar/desmarcar todas</button>
+        <span class="spacer"></span>
+        <button class="btn" value="cancel" type="button">Cancelar</button>
+        <button class="btn primary" value="ok" id="sugestoesOk">Adicionar</button>
+      </div>
+    </form>
+  </dialog>
+
   <!-- Reajuste de preços -->
   <dialog id="dlgReajuste">
     <form method="dialog" class="dlg" id="formReajuste">

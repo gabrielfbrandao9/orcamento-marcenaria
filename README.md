@@ -38,6 +38,9 @@ Funciona no navegador, sem servidor próprio. É só HTML, CSS e JavaScript, com
 - **Catálogo**: materiais com o preço de custo, separados em categorias: chapas, fitas de borda,
   dobradiças, corrediças, puxadores, ferragens, fixação e colas, vidros e espelhos, iluminação,
   tintas e acabamentos, acessórios, serviços terceirizados e outros.
+  **Materiais sugeridos** traz uma lista pronta de mais de 100 materiais comuns de marcenaria
+  (com preços de referência para conferir); dá para escolher as categorias, e só entra o que
+  ainda não está no catálogo.
   **Reajustar preços** aumenta (ou diminui) todos de uma vez, ou só uma categoria.
   Os orçamentos já feitos guardam o preço da época e não mudam.
 - **Modo claro e escuro**: botão ☀/☾ no topo, ou em **Ajustes → Aparência** (Automático segue o

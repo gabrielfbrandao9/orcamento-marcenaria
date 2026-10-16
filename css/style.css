@@ -682,6 +682,30 @@ input[type='search'] { padding-left: 34px; background: var(--surface) url("data:
 .ccard p { margin: 0; font-size: 13.5px; color: var(--muted); }
 .ccard .links { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
 
+/* Materiais sugeridos */
+.suggest {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+  padding: 10px 12px;
+  border: 1px dashed var(--line-strong);
+  border-radius: 10px;
+  font-size: 14px;
+  color: var(--muted);
+}
+.suggest span { flex: 1 1 200px; }
+.sug-list { max-height: min(52vh, 420px); overflow-x: hidden; overflow-y: auto; border: 1px solid var(--line); border-radius: 10px; }
+.sug-cat { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; cursor: pointer; }
+.sug-cat + .sug-cat { border-top: 1px solid var(--line); }
+.sug-cat:hover { background: var(--surface-2); }
+.sug-cat input { margin-top: 3px; width: 17px; height: 17px; accent-color: var(--accent); flex: none; }
+.sug-cat strong { font-size: 14.5px; }
+.sug-cat .n { font: 12px var(--mono); color: var(--muted); }
+.sug-cat small { display: block; margin-top: 2px; font-size: 12.5px; color: var(--muted); line-height: 1.35; }
+#dlgSugestoes { width: min(560px, calc(100vw - 24px)); }
+
 /* ---------- Ajustes ---------- */
 
 .settings { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 14px; align-items: start; }
@@ -719,6 +743,7 @@ dialog {
   color: var(--ink);
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
 }
+dialog { overflow-x: hidden; }
 dialog::backdrop { background: rgba(20, 15, 10, 0.45); }
 .dlg { padding: 16px 18px 18px; }
 .dlg-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
