@@ -3,12 +3,14 @@
  *
  *   materiais   = soma dos materiais de todos os móveis (× quantidade de cada móvel)
  *   mão de obra = materiais × % de mão de obra
- *   margem      = (materiais + mão de obra) × % de margem de lucro
- *   total       = materiais + mão de obra + margem + frete + instalação
+ *   total       = materiais + mão de obra + frete + instalação
  *   à vista     = total − % de desconto
  *   parcelado   = total dividido em até N parcelas (com juros ao mês, se houver)
  *
  * Cada valor é arredondado em centavos, para a soma do PDF bater com o total.
+ *
+ * A margem de lucro saiu do app. Orçamentos antigos que tinham margem
+ * (margemPct > 0) continuam com ela, para o total não mudar.
  */
 (function (global) {
   'use strict';
