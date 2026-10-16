@@ -8,12 +8,11 @@ Funciona no navegador, sem servidor próprio. É só HTML, CSS e JavaScript, com
 
 ## Como funciona
 
-**Preço = materiais + mão de obra + margem de lucro + frete + instalação**
+**Preço = materiais + mão de obra + frete + instalação**
 
 - **Materiais**: soma dos materiais de cada móvel (quantidade × preço de custo), multiplicada pela
   quantidade do móvel.
 - **Mão de obra**: um percentual sobre os materiais (ex.: 100%).
-- **Margem de lucro**: um percentual sobre materiais + mão de obra (ex.: 20%).
 - **Frete** e **instalação**: valores em reais.
 - **À vista** com desconto (%) e **parcelado** em até N vezes, com ou sem juros ao mês.
 
@@ -31,7 +30,7 @@ Funciona no navegador, sem servidor próprio. É só HTML, CSS e JavaScript, com
   no aparelho e sobem para a nuvem (Supabase Storage); em outro aparelho, são baixados ao abrir.
   Não entram no PDF do cliente.
 - **PDF para o cliente**: tudo detalhado (materiais de cada móvel linha a linha, mão de obra,
-  margem, frete, instalação, total, à vista e parcelado) com o logo, os dados da marcenaria e as
+  frete, instalação, total, à vista e parcelado) com o logo, os dados da marcenaria e as
   condições de pagamento. No celular, o botão **Enviar PDF** abre o compartilhamento do Android
   (WhatsApp, e-mail…).
 - **Clientes**: nome, telefone, endereço e anotações, com atalho para o WhatsApp e para criar
@@ -44,7 +43,7 @@ Funciona no navegador, sem servidor próprio. É só HTML, CSS e JavaScript, com
 - **Modo claro e escuro**: botão ☀/☾ no topo, ou em **Ajustes → Aparência** (Automático segue o
   tema do celular ou do computador).
 - **Ajustes**: dados da marcenaria (saem no PDF), valores padrão para orçamentos novos
-  (mão de obra, margem, desconto, parcelas, juros, condições de pagamento), conta e
+  (mão de obra, desconto, parcelas, juros, condições de pagamento), conta e
   **cópia de segurança** (baixar e restaurar um arquivo `.json`).
 
 ## Onde ficam os dados

@@ -43,7 +43,6 @@
     documento: '',
     email: '',
     maoDeObraPct: 100,
-    margemPct: 20,
     descontoVistaPct: 5,
     parcelasMax: 10,
     jurosPct: 0,
@@ -190,7 +189,7 @@
     const cfg = getConfig();
     const out = {
       numero: 0, data: today(), status: 'pendente', clienteId: '', clienteNome: '', titulo: '',
-      maoDeObraPct: cfg.maoDeObraPct, margemPct: cfg.margemPct, frete: 0, instalacao: 0,
+      maoDeObraPct: cfg.maoDeObraPct, margemPct: 0, frete: 0, instalacao: 0,
       descontoVistaPct: cfg.descontoVistaPct, parcelasMax: cfg.parcelasMax, jurosPct: cfg.jurosPct,
       condicoes: '', observacoes: '', ...q,
     };
@@ -502,7 +501,7 @@
             <div class="card-head"><h3>Valores</h3></div>
             <div class="values">
               ${field('maoDeObraPct', 'Mão de obra', 'pct')}
-              ${field('margemPct', 'Margem de lucro', 'pct')}
+              ${Number(editing.margemPct) > 0 ? field('margemPct', 'Margem de lucro (antiga)', 'pct') : ''}
               ${field('frete', 'Frete', 'money')}
               ${field('instalacao', 'Instalação', 'money')}
               ${field('descontoVistaPct', 'Desconto à vista', 'pct')}
@@ -571,7 +570,7 @@
     $('#summary').innerHTML = `<table class="summary">
         <tr><td>Materiais</td><td>${money(c.materiais)}</td></tr>
         <tr><td>Mão de obra <small>(${num(q.maoDeObraPct)}%)</small></td><td>${money(c.maoDeObra)}</td></tr>
-        <tr><td>Margem de lucro <small>(${num(q.margemPct)}%)</small></td><td>${money(c.margem)}</td></tr>
+        ${c.margem ? `<tr><td>Margem de lucro <small>(${num(q.margemPct)}%)</small></td><td>${money(c.margem)}</td></tr>` : ''}
         <tr><td>Frete</td><td>${money(c.frete)}</td></tr>
         <tr><td>Instalação</td><td>${money(c.instalacao)}</td></tr>
         <tr class="total"><td>Total</td><td>${money(c.total)}</td></tr>
@@ -764,6 +763,7 @@
         copy.numero = nextNumber();
         copy.data = today();
         copy.status = 'pendente';
+        copy.margemPct = 0;
         copy.criadoEm = Date.now();
         copy.moveis.forEach((mv) => { mv.id = Store.uuid(); mv.itens.forEach((it) => { it.id = Store.uuid(); }); });
         const saved = Store.put('orcamento', copy);
@@ -1287,9 +1287,8 @@
         <section class="card">
           <div class="card-head"><h3>Valores padrão</h3></div>
           <p class="muted" style="margin:0 0 4px">Usados em cada orçamento novo. Em cada orçamento dá para mudar.</p>
-          <div class="field-row">${cfgField('maoDeObraPct', 'Mão de obra (% dos materiais)', { kind: 'pct' })}${cfgField('margemPct', 'Margem de lucro', { kind: 'pct' })}</div>
-          <div class="field-row">${cfgField('descontoVistaPct', 'Desconto à vista', { kind: 'pct' })}${cfgField('parcelasMax', 'Parcelas (até)', { kind: 'int' })}</div>
-          <div class="field-row">${cfgField('jurosPct', 'Juros ao mês (0 = sem juros)', { kind: 'pct' })}<span></span></div>
+          <div class="field-row">${cfgField('maoDeObraPct', 'Mão de obra (% dos materiais)', { kind: 'pct' })}${cfgField('descontoVistaPct', 'Desconto à vista', { kind: 'pct' })}</div>
+          <div class="field-row">${cfgField('parcelasMax', 'Parcelas (até)', { kind: 'int' })}${cfgField('jurosPct', 'Juros ao mês (0 = sem juros)', { kind: 'pct' })}</div>
           ${cfgField('condicoes', 'Condições de pagamento', { textarea: true })}
         </section>
         <section class="card">

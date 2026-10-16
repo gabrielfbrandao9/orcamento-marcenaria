@@ -2,7 +2,7 @@
  * PDF do orçamento (jsPDF + jsPDF-AutoTable).
  *
  * Mostra tudo detalhado: os materiais de cada móvel, linha a linha, e o resumo
- * com materiais, mão de obra, margem de lucro, frete, instalação, total,
+ * com materiais, mão de obra, frete, instalação, total,
  * valor à vista e parcelado, além das condições de pagamento.
  *
  * As fontes padrão do PDF só têm caracteres do português "comum": evite
@@ -203,8 +203,8 @@
     const resumo = [
       ['Materiais', money(c.materiais)],
       [`Mão de obra (${pct(q.maoDeObraPct)} sobre os materiais)`, money(c.maoDeObra)],
-      [`Margem de lucro (${pct(q.margemPct)} sobre materiais + mão de obra)`, money(c.margem)],
     ];
+    if (c.margem) resumo.push([`Margem de lucro (${pct(q.margemPct)} sobre materiais + mão de obra)`, money(c.margem)]);
     if (c.frete) resumo.push(['Frete', money(c.frete)]);
     if (c.instalacao) resumo.push(['Instalação', money(c.instalacao)]);
     doc.autoTable({
