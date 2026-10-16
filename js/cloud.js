@@ -1,7 +1,8 @@
 /*
  * Nuvem (Supabase): login e leitura/gravação da tabela "orcamento_registros".
  * Cada registro é um material, cliente, orçamento, anexo ou a configuração,
- * guardado como JSON. Os arquivos dos anexos ficam no Supabase Storage.
+ * guardado como JSON, e pertence a um espaço: a equipe ou, sem equipe, a
+ * própria conta. Os arquivos dos anexos ficam no Supabase Storage.
  * Se o Supabase não estiver configurado, Cloud.enabled = false e o site
  * funciona só com o armazenamento do aparelho.
  */
@@ -57,7 +58,7 @@
       check(await client.auth.signOut());
     },
 
-    // Todos os registros da pessoa, inclusive os excluídos (para outros aparelhos saberem da exclusão).
+    // Todos os registros do espaço (equipe), inclusive os excluídos (para outros aparelhos saberem da exclusão).
     async pullAll() {
       const all = [];
       for (let from = 0; ; from += PAGE) {
@@ -67,13 +68,44 @@
       }
     },
 
-    async push(records) {
+    // equipeId: espaço onde gravar (null se o banco ainda não tem equipes).
+    async push(records, equipeId) {
       for (let i = 0; i < records.length; i += 200) {
-        const rows = records.slice(i, i + 200).map((r) => ({
-          id: r.id, tipo: r.tipo, dados: r.dados, excluido: !!r.excluido, alterado_em: r.alterado_em,
-        }));
+        const rows = records.slice(i, i + 200).map((r) => {
+          const row = { id: r.id, tipo: r.tipo, dados: r.dados, excluido: !!r.excluido, alterado_em: r.alterado_em };
+          if (equipeId) row.equipe_id = equipeId;
+          return row;
+        });
         check(await client.from(TABLE).upsert(rows));
       }
+    },
+
+    // ---------- Equipe ----------
+
+    // { equipe_id, nome, papel, membros, convites_enviados, convites_recebidos }
+    async equipe() {
+      return check(await client.rpc('equipe_estado'));
+    },
+
+    async convidar(email, nome) {
+      check(await client.rpc('equipe_convidar', { p_email: email, p_nome: nome }));
+    },
+
+    // Cancela (o dono) ou recusa (quem foi convidado).
+    async apagarConvite(id) {
+      check(await client.rpc('equipe_apagar_convite', { p_id: id }));
+    },
+
+    async aceitarConvite(id, levarDados) {
+      check(await client.rpc('equipe_aceitar_convite', { p_id: id, p_levar: !!levarDados }));
+    },
+
+    async removerMembro(userId) {
+      check(await client.rpc('equipe_remover_membro', { p_user: userId }));
+    },
+
+    async sairDaEquipe() {
+      check(await client.rpc('equipe_sair'));
     },
 
     // ---------- Arquivos (Supabase Storage) ----------
@@ -93,6 +125,11 @@
     // O bucket de arquivos ainda não foi criado (falta rodar o schema.sql atualizado).
     isMissingBucket(err) {
       return !!err && /bucket not found/i.test(err.message || '');
+    },
+
+    // As funções da equipe ainda não existem no Supabase (falta rodar o schema.sql atualizado).
+    isMissingFunction(err) {
+      return !!err && (err.code === 'PGRST202' || err.code === '42883' || /could not find the function/i.test(err.message || ''));
     },
 
     // A tabela ainda não foi criada no Supabase (falta rodar o schema.sql).

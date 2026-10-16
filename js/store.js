@@ -7,6 +7,11 @@
  * baixados e combinados com os do aparelho: em cada registro, vence a
  * alteração mais recente. Assim o app funciona sem internet e os dados
  * aparecem no celular e no computador.
+ *
+ * Os dados do aparelho são de um espaço só (db.owner): a equipe da conta ou,
+ * sem equipe, a própria conta. A cada vez que baixa da nuvem, o app confere
+ * a equipe; se ela mudou (entrou, saiu ou foi removido), começa do zero com
+ * os dados do espaço novo.
  */
 (function (global) {
   'use strict';
@@ -22,16 +27,22 @@
   let pushTimer = null;
   let status = 'local';
   let lastError = null;
+  let equipe = null;         // resposta de Cloud.equipe()
+  let equipeJson = '';
+  let semEquipes = false;    // o banco ainda não tem as funções de equipe (schema.sql antigo)
+  let equipeConferida = false;
   const listeners = new Set();
 
-  function empty() {
-    return { records: {}, dirty: {}, owner: null };
+  // owner: espaço dos dados (equipe ou conta); user: conta que entrou neste aparelho.
+  function empty(userId) {
+    return { records: {}, dirty: {}, owner: null, user: userId || null };
   }
 
   function load() {
     try {
       const d = JSON.parse(localStorage.getItem(KEY));
-      if (d && d.records) return { records: d.records, dirty: d.dirty || {}, owner: d.owner || null };
+      // Antes das equipes, owner era o id da conta.
+      if (d && d.records) return { records: d.records, dirty: d.dirty || {}, owner: d.owner || null, user: d.user || d.owner || null };
     } catch (e) { /* sem armazenamento ou dados corrompidos */ }
     return empty();
   }
@@ -106,6 +117,33 @@
     return changed;
   }
 
+  // Confere a equipe da conta. Se o espaço mudou, os dados do aparelho são de
+  // outro espaço: começa do zero e baixa os do espaço novo.
+  async function loadTeam() {
+    let e = null;
+    try {
+      e = await Cloud.equipe();
+      semEquipes = false;
+    } catch (err) {
+      if (!Cloud.isMissingFunction(err)) throw err;
+      semEquipes = true;
+    }
+    const espaco = e ? e.equipe_id : user.id;
+    if (db.owner && db.owner !== espaco) {
+      db = empty(user.id);
+      emit({ type: 'change', source: 'remote', ids: [] });
+    }
+    db.owner = espaco;
+    persist();
+    equipeConferida = true;
+    const json = JSON.stringify(e);
+    if (json !== equipeJson) {
+      equipeJson = json;
+      equipe = e;
+      emit({ type: 'team', equipe: e });
+    }
+  }
+
   async function sync(pull) {
     if (!global.Cloud || !Cloud.enabled || !user) {
       setStatus('local');
@@ -123,7 +161,8 @@
     syncing = true;
     setStatus('saving');
     try {
-      if (pull) {
+      if (pull || !equipeConferida) {
+        await loadTeam();
         const changed = merge(await Cloud.pullAll());
         persist();
         if (changed.length) emit({ type: 'change', source: 'remote', ids: changed });
@@ -132,7 +171,7 @@
       if (ids.length) {
         const recs = ids.map((id) => db.records[id]).filter(Boolean);
         const sent = recs.map((r) => [r.id, r.alterado_em]);
-        await Cloud.push(recs);
+        await Cloud.push(recs, semEquipes ? null : db.owner);
         // Só tira da fila o que não foi alterado de novo durante o envio.
         sent.forEach(([id, t]) => { if (db.records[id] && db.records[id].alterado_em === t) delete db.dirty[id]; });
         ids.forEach((id) => { if (!db.records[id]) delete db.dirty[id]; });
@@ -141,6 +180,7 @@
       setStatus(pendingCount() ? 'saving' : 'saved');
     } catch (err) {
       console.error(err);
+      if (err && err.code === '42501') equipeConferida = false; // talvez a equipe tenha mudado: confere na próxima vez
       if (Cloud.isMissingTable(err)) setStatus('no-table', err);
       else setStatus(navigator.onLine ? 'error' : 'offline', err);
     } finally {
@@ -229,20 +269,30 @@
     // Chamado quando a pessoa entra ou sai da conta.
     setUser(u) {
       user = u;
+      equipe = null;
+      equipeJson = '';
+      equipeConferida = false;
       if (!u) {
         clearTimeout(pushTimer);
         setStatus('local');
+        emit({ type: 'team', equipe: null });
         return;
       }
-      if (db.owner && db.owner !== u.id) {
+      if (db.user && db.user !== u.id) {
         // Outra conta neste aparelho: não mistura os dados das duas.
-        db = empty();
+        db = empty(u.id);
         emit({ type: 'change', source: 'remote', ids: [] });
       }
-      db.owner = u.id;
+      db.user = u.id;
       persist();
       sync(true);
     },
+
+    // Equipe da conta (null se ainda não conferiu ou se o banco não tem equipes).
+    equipe: () => equipe,
+    semEquipes: () => semEquipes,
+    // Espaço dos dados: pasta dos arquivos na nuvem.
+    espaco: () => db.owner || (user && user.id) || null,
 
     sync(pull = true) {
       return sync(pull);

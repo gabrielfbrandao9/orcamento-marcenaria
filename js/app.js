@@ -284,6 +284,11 @@
       return `<div class="banner"><p>Os dados estão salvos <strong>só neste aparelho</strong>. Entre na sua conta para
         guardar na nuvem e usar no celular e no computador.</p><button type="button" class="btn small" data-act="login">Entrar</button></div>`;
     }
+    const conv = user && Store.equipe() && (Store.equipe().convites_recebidos || [])[0];
+    if (conv) {
+      return `<div class="banner"><p><strong>${esc(conv.dono || 'Alguém')}</strong> convidou você para a equipe
+        <strong>${esc(conv.equipe || '')}</strong>.</p><button type="button" class="btn small primary" data-act="team-open-invite" data-id="${esc(conv.id)}">Ver convite</button></div>`;
+    }
     return '';
   }
 
@@ -1265,6 +1270,8 @@
     if (st === 'saving') return 'Enviando alterações…';
     if (Anexos.bucketMissing()) return 'Os dados estão na nuvem, mas os arquivos dos orçamentos ainda não: falta rodar o schema.sql atualizado no Supabase (veja SUPABASE.md).';
     if (Anexos.uploading()) return 'Enviando arquivos para a nuvem…';
+    const e = Store.equipe();
+    if (e && (e.membros || []).length > 1) return 'Tudo salvo na nuvem. Todos da equipe veem os mesmos dados, em qualquer aparelho.';
     return 'Tudo salvo na nuvem. Os dados aparecem em qualquer aparelho em que você entrar com esta conta.';
   }
 
@@ -1307,6 +1314,7 @@
             ${Cloud.enabled ? (user ? '<button type="button" class="btn" data-act="sync-now">Sincronizar agora</button><button type="button" class="btn ghost" data-act="logout">Sair da conta</button>' : '<button type="button" class="btn primary" data-act="login">Entrar</button>') : ''}
           </div>
         </section>
+        ${teamCard()}
         <section class="card">
           <div class="card-head"><h3>Cópia de segurança</h3></div>
           <p class="muted">Baixe um arquivo com todos os orçamentos, clientes e materiais. Guarde no computador ou no Google Drive. As fotos e PDFs anexados não vão nesse arquivo: eles ficam na nuvem.</p>
@@ -1322,6 +1330,147 @@
           <div class="btn-row"><button type="button" class="btn primary" data-act="install" ${installPrompt ? '' : 'hidden'}>Instalar app</button></div>
         </section>
       </div>`;
+  }
+
+  // ---------- Equipe ----------
+  // Mais de uma conta com os mesmos dados. Quem manda é o banco (supabase/schema.sql);
+  // aqui só mostra a equipe e chama as funções de convidar, aceitar, remover e sair.
+
+  function teamCard() {
+    if (!Cloud.enabled || !user) return '';
+    const e = Store.equipe();
+    let body;
+    if (Store.semEquipes()) {
+      body = `<p class="muted">Para usar a equipe, falta rodar o <strong>schema.sql</strong> atualizado no Supabase (veja o arquivo SUPABASE.md).</p>`;
+    } else if (!e) {
+      body = `<p class="muted">${navigator.onLine ? 'Carregando…' : 'Conecte à internet para ver a equipe.'}</p>`;
+    } else {
+      const souDono = e.papel === 'dono';
+      const podeConvidar = souDono || !e.papel;
+      const membros = e.membros || [];
+      const enviados = e.convites_enviados || [];
+      const recebidos = e.convites_recebidos || [];
+      const intro = !e.papel
+        ? 'Só você usa estes dados. Convide quem trabalha com você: todos da equipe veem e alteram os mesmos orçamentos, clientes, materiais e ajustes.'
+        : souDono
+          ? 'Todos da equipe veem e alteram os mesmos orçamentos, clientes, materiais e ajustes. Só você convida e remove pessoas.'
+          : `Você faz parte da equipe <strong>${esc(e.nome || '')}</strong>. Todos veem e alteram os mesmos orçamentos, clientes, materiais e ajustes.`;
+      const pessoas = membros.map((m) => `<li><span class="who">${esc(m.email)}${m.user_id === user.id ? ' <span class="tag">(você)</span>' : ''}</span>
+          ${m.papel === 'dono' ? '<span class="tag">Dono</span>' : ''}
+          ${souDono && m.user_id !== user.id ? `<button type="button" class="btn small danger-ghost" data-act="team-remove" data-id="${esc(m.user_id)}" data-email="${esc(m.email)}">Remover</button>` : ''}</li>`);
+      const convites = enviados.map((c) => `<li><span class="who">${esc(c.email)} <span class="tag">aguardando</span></span>
+          <button type="button" class="btn small" data-act="team-whats" data-email="${esc(c.email)}">Avisar no WhatsApp</button>
+          ${souDono ? `<button type="button" class="btn small ghost" data-act="team-cancel" data-id="${esc(c.id)}">Cancelar</button>` : ''}</li>`);
+      body = `<p class="muted" style="margin:0">${intro}</p>
+        ${recebidos.map((c) => `<div class="notice" style="margin-top:12px"><span><strong>${esc(c.dono || 'Alguém')}</strong> convidou você para a equipe <strong>${esc(c.equipe || '')}</strong>.</span>
+          <button type="button" class="btn small primary" data-act="team-open-invite" data-id="${esc(c.id)}">Ver convite</button></div>`).join('')}
+        ${pessoas.length + convites.length ? `<ul class="team-list">${pessoas.join('')}${convites.join('')}</ul>` : ''}
+        ${podeConvidar ? `<div class="team-invite">
+            <input type="email" id="teamEmail" placeholder="E-mail de quem vai entrar" autocomplete="off" aria-label="E-mail para convidar">
+            <button type="button" class="btn primary" data-act="team-invite-send">Convidar</button>
+          </div>
+          <p class="muted" style="margin:8px 0 0;font-size:13px">A pessoa entra no app com este e-mail (Google ou link por e-mail) e aceita o convite.</p>` : ''}
+        ${e.papel === 'membro' || (souDono && membros.length === 1) ? `<div class="btn-row">
+            <button type="button" class="btn ghost" data-act="team-leave">${souDono ? 'Desfazer a equipe' : 'Sair da equipe'}</button></div>` : ''}`;
+    }
+    return `<section class="card"><div class="card-head"><h3>Equipe</h3></div>${body}</section>`;
+  }
+
+  // Ações da equipe: precisam de internet; depois, baixa tudo de novo.
+  async function teamCall(fn, okMsg) {
+    if (!navigator.onLine) {
+      toast('Sem internet: conecte para mexer na equipe.');
+      return false;
+    }
+    try {
+      await fn();
+    } catch (err) {
+      toast(err.message || String(err), 6000);
+      return false;
+    }
+    if (okMsg) toast(okMsg, 5000);
+    await Store.sync(true);
+    return true;
+  }
+
+  // Antes de trocar de espaço, tudo o que foi feito aqui precisa estar na nuvem.
+  async function readyToSwitch() {
+    if (!navigator.onLine) {
+      toast('Sem internet: conecte para mexer na equipe.');
+      return false;
+    }
+    flushSave();
+    flushConfig();
+    await Store.sync(false);
+    if (Store.pendingCount() || Anexos.uploading()) {
+      toast('Ainda há alterações ou arquivos subindo para a nuvem. Espere aparecer "Salvo na nuvem" e tente de novo.', 6000);
+      return false;
+    }
+    return true;
+  }
+
+  function teamInvite() {
+    const input = $('#teamEmail');
+    const email = (input ? input.value : '').trim().toLowerCase();
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+      toast('Digite um e-mail válido.');
+      if (input) input.focus();
+      return;
+    }
+    teamCall(() => Cloud.convidar(email, getConfig().nome), `Convite criado. Avise ${email} para entrar no app com este e-mail.`);
+  }
+
+  function teamWhats(email) {
+    const e = Store.equipe();
+    const nome = (e && e.nome) || getConfig().nome;
+    const site = location.origin + location.pathname;
+    const msg = `Oi! Te convidei para a equipe ${nome} no app de orçamentos. Abra ${site} e entre com o e-mail ${email} (pelo Google ou pelo link que chega no e-mail). Depois é só aceitar o convite.`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank', 'noopener');
+  }
+
+  async function teamOpenInvite(id) {
+    const e = Store.equipe();
+    const c = e && (e.convites_recebidos || []).find((x) => x.id === id);
+    if (!c) return;
+    const dlg = $('#dlgConvite');
+    const f = $('#formConvite');
+    f.reset();
+    const membro = e.papel === 'membro';
+    const n = { orc: quotes().length, cli: clients().length, mat: Store.all('material').length };
+    const temDados = !membro && n.orc + n.cli + n.mat > 0;
+    const plural = (k, um, varios) => `${k} ${k === 1 ? um : varios}`;
+    $('#conviteTexto').innerHTML = `<strong>${esc(c.dono || 'Alguém')}</strong> convidou você para a equipe <strong>${esc(c.equipe || '')}</strong>.
+      Todos da equipe veem e alteram os mesmos orçamentos, clientes, materiais e ajustes.
+      ${membro ? `Você vai sair da equipe <strong>${esc(e.nome || '')}</strong>.` : ''}`;
+    $('#conviteOpcoes').innerHTML = temDados ? `
+      <label class="choice"><input type="radio" name="levar" value="1" checked>
+        <span><strong>Levar meus dados para a equipe</strong>
+        <small>${plural(n.orc, 'orçamento', 'orçamentos')}, ${plural(n.cli, 'cliente', 'clientes')} e ${plural(n.mat, 'material', 'materiais')} passam a ser da equipe.
+        Os seus ajustes não vão: valem os da equipe. Materiais que os dois cadastraram vão aparecer repetidos no catálogo.</small></span></label>
+      <label class="choice"><input type="radio" name="levar" value="0">
+        <span><strong>Começar só com os dados da equipe</strong>
+        <small>Os seus dados ficam guardados na sua conta e voltam se você sair da equipe.</small></span></label>` : '';
+    $('#conviteRecusar').dataset.id = id;
+    const r = await openDialog(dlg, () => ({ levar: temDados && f.levar.value === '1' }));
+    if (!r || !(await readyToSwitch())) return;
+    const ok = await teamCall(() => Cloud.aceitarConvite(id, r.levar), `Agora você faz parte da equipe ${c.equipe || ''}.`);
+    if (ok) {
+      cfgDraft = null;
+      render();
+    }
+  }
+
+  async function teamLeave() {
+    const e = Store.equipe();
+    if (!e || !e.papel) return;
+    const msg = e.papel === 'dono'
+      ? 'Desfazer a equipe? Os dados continuam com você.'
+      : `Sair da equipe ${e.nome || ''}? Você deixa de ver os orçamentos, clientes e materiais da equipe (inclusive os que você trouxe) e volta para os seus dados.`;
+    if (!confirm(msg) || !(await readyToSwitch())) return;
+    if (await teamCall(() => Cloud.sairDaEquipe(), e.papel === 'dono' ? 'Equipe desfeita' : 'Você saiu da equipe')) {
+      cfgDraft = null;
+      render();
+    }
   }
 
   function onConfigInput(t) {
@@ -1451,7 +1600,27 @@
       case 'install': return install();
       case 'toggle-theme': return setTheme(isDark() ? 'light' : 'dark');
       case 'theme': return setTheme(btn.dataset.value);
+      case 'team-invite-send': return teamInvite();
+      case 'team-whats': return teamWhats(btn.dataset.email);
+      case 'team-cancel': return teamCall(() => Cloud.apagarConvite(btn.dataset.id), 'Convite cancelado');
+      case 'team-remove': {
+        if (!confirm(`Tirar ${btn.dataset.email} da equipe? Essa pessoa deixa de ver os dados da equipe. O que ela fez continua aqui.`)) return;
+        return teamCall(() => Cloud.removerMembro(btn.dataset.id), 'Pessoa removida da equipe');
+      }
+      case 'team-open-invite': return teamOpenInvite(btn.dataset.id);
+      case 'team-decline': {
+        $('#dlgConvite').close('cancel');
+        return teamCall(() => Cloud.apagarConvite(btn.dataset.id), 'Convite recusado');
+      }
+      case 'team-leave': return teamLeave();
       default:
+    }
+  });
+
+  view.addEventListener('keydown', (e) => {
+    if (e.target.id === 'teamEmail' && e.key === 'Enter') {
+      e.preventDefault();
+      teamInvite();
     }
   });
 
@@ -1491,6 +1660,9 @@
       // A faixa de aviso da tabela aparece/some conforme o status.
       if ((ev.status === 'no-table') !== (lastStatus === 'no-table') && ['orcamentos', 'ajustes'].includes(current.name)) refreshFromRemote();
       lastStatus = ev.status;
+    } else if (ev.type === 'team') {
+      renderSync();
+      if (['orcamentos', 'ajustes'].includes(current.name)) refreshFromRemote();
     } else if (ev.type === 'change' && ev.source === 'remote') {
       refreshFromRemote(ev.ids);
     } else if (ev.type === 'error') {
