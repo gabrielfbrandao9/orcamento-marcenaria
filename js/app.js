@@ -1112,7 +1112,7 @@
     if (!quote) return;
     const botoes = $$('#dlgPlano button, #dlgPlano label.btn');
     botoes.forEach((b) => { b.disabled = true; });
-    planoMsg('Calculando o plano de corte…');
+    planoMsg('Gerando o PDF do plano de corte… (pode levar alguns segundos)');
     try {
       const project = await getProject();
       const r = await PlanoCorte.buildPdf(project, {
@@ -1122,9 +1122,10 @@
       await Anexos.add(quote.id, [r.file]);
       $('#dlgPlano').close();
       renderFiles();
-      toast(r.unplaced
+      const extra = r.simples ? ' Não deu para usar o PDF do Otimizador; foi anexado um PDF simplificado.' : '';
+      toast((r.unplaced
         ? `Plano anexado, mas ${r.unplaced === 1 ? '1 peça não coube' : `${r.unplaced} peças não couberam`} nas chapas do projeto.`
-        : `Plano de corte anexado: ${r.stats.sheetCount} ${r.stats.sheetCount === 1 ? 'chapa' : 'chapas'}.`, 6000);
+        : `Plano de corte anexado: ${r.stats.sheetCount} ${r.stats.sheetCount === 1 ? 'chapa' : 'chapas'}.`) + extra, 7000);
     } catch (err) {
       console.error(err);
       planoMsg('Não foi possível anexar: ' + err.message, true);

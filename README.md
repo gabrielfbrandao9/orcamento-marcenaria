@@ -31,9 +31,10 @@ Funciona no navegador, sem servidor próprio. É só HTML, CSS e JavaScript, com
   Não entram no PDF do cliente.
 - **Anexar plano de corte**: no cartão "Arquivos", escolhe um projeto do
   [Otimizador de Cortes](https://gabrielfbrandao9.github.io/otimizador-de-cortes/) (salvo na nuvem,
-  neste aparelho ou um `.json` exportado) e o app anexa um PDF com o resumo, a lista de peças e o
-  desenho de cada chapa. O plano é calculado com o próprio código publicado do Otimizador
-  (`js/optimizer.js` e `js/render.js`), então sai igual ao de lá; precisa de internet.
+  neste aparelho ou um `.json` exportado) e o app anexa **o mesmo PDF do botão "Baixar PDF" do
+  Otimizador**: o Otimizador é aberto escondido em modo embutido (`?embed`, que não carrega nem
+  salva nada) e gera o PDF. Funciona porque os dois sites ficam no mesmo endereço; precisa de
+  internet. Se o Otimizador não responder, o app anexa um PDF simplificado e avisa.
 - **Ocultar preços dos materiais no PDF**: chave no cartão "PDF para o cliente" de cada orçamento
   (e um padrão para orçamentos novos em Ajustes). O PDF lista os materiais e as quantidades sem
   preço unitário nem subtotal; o total de cada móvel e o resumo continuam. No app nada muda.

@@ -1,9 +1,11 @@
 /*
  * Plano de corte do Otimizador de Cortes em PDF, para anexar ao orçamento.
  *
- * Usa o próprio código publicado do Otimizador (js/optimizer.js e js/render.js),
- * carregado só quando precisa: o plano calculado e o desenho das chapas saem
- * iguais aos do Otimizador.
+ * O PDF é o mesmo do botão "Baixar PDF" do Otimizador: o Otimizador é aberto
+ * escondido em modo embutido (?embed, não carrega nem salva nada) e gera o PDF
+ * do projeto. Isso exige os dois sites no mesmo endereço (gabrielfbrandao9.github.io).
+ * Se o Otimizador não responder, o app monta um PDF simplificado com o código
+ * publicado dele (js/optimizer.js e js/render.js).
  *
  * Os projetos vêm de três lugares:
  *   - nuvem: tabela "projects" do Supabase (mesma conta do Otimizador);
@@ -14,7 +16,11 @@
 (function (global) {
   'use strict';
 
-  const BASE = ((global.APP_CONFIG || {}).otimizadorUrl || 'https://gabrielfbrandao9.github.io/otimizador-de-cortes/').replace(/\/?$/, '/');
+  // No computador (localhost), com a pasta "Claude Code" servida inteira, usa a pasta vizinha.
+  const LOCAL = /^(localhost|127\.0\.0\.1)$/.test(location.hostname) && location.pathname.includes('/orcamento-marcenaria/');
+  const BASE = LOCAL
+    ? new URL('../otimizador-de-cortes/', location.href).href
+    : ((global.APP_CONFIG || {}).otimizadorUrl || 'https://gabrielfbrandao9.github.io/otimizador-de-cortes/').replace(/\/?$/, '/');
 
   const WOOD = [123, 74, 38];
   const WOOD_SOFT = [244, 234, 220];
@@ -107,7 +113,50 @@
     return { ...data, name: data.name || file.name.replace(/\.json$/i, '') };
   }
 
-  // ---------- PDF ----------
+  // ---------- PDF do próprio Otimizador ----------
+
+  // Abre o Otimizador escondido e espera ele oferecer a função de PDF.
+  function openEmbed() {
+    return new Promise((resolve, reject) => {
+      const url = new URL(BASE + '?embed=1', location.href);
+      if (url.origin !== location.origin) {
+        reject(new Error('o Otimizador está em outro endereço'));
+        return;
+      }
+      const frame = document.createElement('iframe');
+      frame.setAttribute('aria-hidden', 'true');
+      frame.tabIndex = -1;
+      frame.style.cssText = 'position:fixed;left:-3000px;top:0;width:1200px;height:900px;border:0;pointer-events:none';
+      const fail = (err) => { frame.remove(); reject(err); };
+      const limite = setTimeout(() => fail(new Error('o Otimizador não respondeu')), 25000);
+      frame.addEventListener('load', () => {
+        const t0 = Date.now();
+        const check = () => {
+          let api = null;
+          try { api = frame.contentWindow.OtimizadorEmbed; } catch (e) { clearTimeout(limite); fail(e); return; }
+          if (api) { clearTimeout(limite); resolve({ api, frame }); return; }
+          // Página carregada sem a função: versão antiga do Otimizador (ou sem internet)
+          if (Date.now() - t0 > 8000) { clearTimeout(limite); fail(new Error('esta versão do Otimizador não gera o PDF para o orçamento')); return; }
+          setTimeout(check, 150);
+        };
+        check();
+      }, { once: true });
+      frame.src = url.href;
+      document.body.appendChild(frame);
+    });
+  }
+
+  async function embedPdf(project) {
+    const { api, frame } = await openEmbed();
+    try {
+      // Cópia simples: o projeto passa para outra página
+      return await api.pdf(JSON.parse(JSON.stringify(project)));
+    } finally {
+      frame.remove();
+    }
+  }
+
+  // ---------- PDF simplificado (reserva) ----------
 
   const nf = (n, d = 0) => Number(n || 0).toLocaleString('pt-BR', { minimumFractionDigits: d, maximumFractionDigits: d });
   const clean = (s) => String(s || '')
@@ -151,7 +200,7 @@
     return groups;
   }
 
-  async function buildPdf(project, opts) {
+  async function buildSimplePdf(project, opts) {
     await loadLibs();
     const { jsPDF } = global.jspdf;
     const result = global.Optimizer.optimize(project);
@@ -303,6 +352,19 @@
 
     const nome = `Plano de corte - ${clean(project.name || 'projeto').replace(/[\\/:*?"<>|]+/g, '-')}.pdf`;
     return { file: new File([doc.output('blob')], nome, { type: 'application/pdf' }), stats: st, unplaced: result.unplaced.length };
+  }
+
+  const fileName = (project) => `Plano de corte - ${clean(project.name || 'projeto').replace(/[\\/:*?"<>|]+/g, '-')}.pdf`;
+
+  // { file, stats, unplaced, simples } (simples: não deu para usar o PDF do Otimizador)
+  async function buildPdf(project, opts) {
+    try {
+      const r = await embedPdf(project);
+      return { file: new File([r.blob], fileName(project), { type: 'application/pdf' }), stats: r.stats, unplaced: r.unplaced, simples: false };
+    } catch (err) {
+      console.warn('PDF do Otimizador indisponível, usando o simplificado:', err);
+      return { ...(await buildSimplePdf(project, opts)), simples: true };
+    }
   }
 
   global.PlanoCorte = { listProjects, loadProject, projectFromFile, buildPdf, loadLibs };

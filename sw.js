@@ -8,7 +8,7 @@
  *
  * Ao mudar a lista de arquivos, aumente a versão para limpar o cache antigo.
  */
-const VERSION = 'v7';
+const VERSION = 'v8';
 const CACHE = `dier-${VERSION}`;
 
 const APP_FILES = [
