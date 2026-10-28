@@ -1540,9 +1540,10 @@
         ${teamCard()}
         <section class="card">
           <div class="card-head"><h3>Cópia de segurança</h3></div>
-          <p class="muted">Baixe um arquivo com todos os orçamentos, clientes e materiais. Guarde no computador ou no Google Drive. As fotos e PDFs anexados não vão nesse arquivo: eles ficam na nuvem.</p>
+          <p class="muted">Baixe um arquivo com todos os orçamentos, clientes e materiais. Guarde no computador ou no Google Drive. A cópia completa (.zip) leva também as fotos e PDFs anexados; a .json só os dados.</p>
           <div class="btn-row">
-            <button type="button" class="btn" data-act="export">Baixar cópia (.json)</button>
+            <button type="button" class="btn primary" data-act="export-zip">Baixar cópia completa (.zip)</button>
+            <button type="button" class="btn" data-act="export">Só os dados (.json)</button>
             <button type="button" class="btn" data-act="import">Restaurar cópia</button>
           </div>
           <p class="muted" style="margin:14px 0 0">Para abrir no Excel ou no Google Planilhas: orçamentos com os totais, os materiais de cada móvel, os clientes e o catálogo, cada um numa aba. (Só para consulta: não dá para restaurar a partir da planilha.)</p>
@@ -1720,34 +1721,81 @@
     cfgDraft.id = saved.id;
   }
 
+  const dadosCopia = () => ({ app: 'orcamento-marcenaria', versao: 1, exportadoEm: new Date().toISOString(), registros: Store.exportAll() });
+
   function exportBackup() {
-    const data = { app: 'orcamento-marcenaria', versao: 1, exportadoEm: new Date().toISOString(), registros: Store.exportAll() };
-    download(new Blob([JSON.stringify(data, null, 1)], { type: 'application/json' }), `backup-orcamentos-${today()}.json`);
+    download(new Blob([JSON.stringify(dadosCopia(), null, 1)], { type: 'application/json' }), `backup-orcamentos-${today()}.json`);
     toast('Cópia de segurança baixada');
   }
 
-  // ---------- Planilha (Excel) ----------
-  // A biblioteca (SheetJS) só é baixada quando alguém exporta.
+  // Bibliotecas da CDN que só são baixadas quando alguém usa: SheetJS (Excel) e JSZip (cópia completa).
+  const libsProntas = {};
 
-  const XLSX_URL = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
-  let xlsxPronto = null;
-
-  function carregarXlsx() {
-    if (window.XLSX) return Promise.resolve(window.XLSX);
-    if (!xlsxPronto) {
-      xlsxPronto = new Promise((resolve, reject) => {
+  function carregarLib(url, nome, erro) {
+    if (window[nome]) return Promise.resolve(window[nome]);
+    if (!libsProntas[nome]) {
+      libsProntas[nome] = new Promise((resolve, reject) => {
         const s = document.createElement('script');
-        s.src = XLSX_URL;
-        s.onload = () => resolve(window.XLSX);
+        s.src = url;
+        s.onload = () => resolve(window[nome]);
         s.onerror = () => {
-          xlsxPronto = null;
-          reject(new Error('não foi possível baixar o gerador de planilhas (sem internet?)'));
+          delete libsProntas[nome];
+          reject(new Error(erro));
         };
         document.head.appendChild(s);
       });
     }
-    return xlsxPronto;
+    return libsProntas[nome];
   }
+
+  const carregarJszip = () => carregarLib('https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js', 'JSZip',
+    'não foi possível baixar o gerador de .zip (sem internet?)');
+
+  // Cópia completa (.zip): dados.json (igual à cópia .json) + arquivos/ com as fotos e PDFs anexados.
+  async function exportZip(btn) {
+    if (btn) btn.disabled = true;
+    try {
+      const JSZip = await carregarJszip();
+      const zip = new JSZip();
+      const dados = dadosCopia();
+      const anexos = Store.all('anexo');
+      const arquivos = {};
+      const faltando = [];
+      for (let i = 0; i < anexos.length; i++) {
+        const a = anexos[i];
+        toast(`Juntando fotos e PDFs… ${i + 1} de ${anexos.length}`, 20000);
+        try {
+          const caminho = `arquivos/${a.id}${(String(a.nome || '').match(/\.[a-z0-9]{1,6}$/i) || [''])[0].toLowerCase()}`;
+          zip.file(caminho, await Anexos.getBlob(a));
+          arquivos[a.id] = caminho;
+        } catch (err) {
+          faltando.push(a.nome || a.id);
+        }
+      }
+      dados.arquivos = arquivos;
+      if (faltando.length) dados.arquivosFaltando = faltando;
+      zip.file('dados.json', JSON.stringify(dados, null, 1));
+      zip.file('LEIA-ME.txt', 'Cópia completa dos Orçamentos (Marcenaria Dier).\r\n\r\n'
+        + 'dados.json: orçamentos, clientes, materiais e ajustes.\r\n'
+        + 'arquivos/: fotos e PDFs anexados aos orçamentos.\r\n\r\n'
+        + 'Para restaurar: no app, Ajustes > Cópia de segurança > Restaurar cópia, e escolha este .zip.\r\n');
+      toast('Montando o arquivo .zip…', 20000);
+      const blob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE', compressionOptions: { level: 6 } });
+      download(blob, `backup-orcamentos-completo-${today()}.zip`);
+      toast(faltando.length
+        ? `Cópia baixada, mas ${faltando.length} arquivo(s) não puderam ser incluídos: ${faltando.join(', ')}`
+        : `Cópia completa baixada (${anexos.length} ${anexos.length === 1 ? 'arquivo' : 'arquivos'})`, 6000);
+    } catch (err) {
+      toast(`Não foi possível gerar a cópia: ${err.message}`, 6000);
+    } finally {
+      if (btn) btn.disabled = false;
+    }
+  }
+
+  // ---------- Planilha (Excel) ----------
+
+  const carregarXlsx = () => carregarLib('https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js', 'XLSX',
+    'não foi possível baixar o gerador de planilhas (sem internet?)');
 
   // Data "AAAA-MM-DD" -> número de série do Excel, sem depender do fuso horário.
   function xDate(s) {
@@ -1845,14 +1893,36 @@
       const file = input.files[0];
       if (!file) return;
       try {
-        const data = JSON.parse(await file.text());
+        // .zip (cópia completa, com os anexos) ou .json (só os dados)
+        let data;
+        let zip = null;
+        if (/\.zip$/i.test(file.name) || /zip/.test(file.type)) {
+          zip = await (await carregarJszip()).loadAsync(file);
+          const j = zip.file('dados.json');
+          if (!j) throw new Error('o .zip não tem o arquivo dados.json');
+          data = JSON.parse(await j.async('string'));
+        } else {
+          data = JSON.parse(await file.text());
+        }
         if (!data || data.app !== 'orcamento-marcenaria' || !Array.isArray(data.registros)) throw new Error('não é uma cópia deste app');
         const n = data.registros.length;
         if (!confirm(`Restaurar ${n} itens da cópia de ${fmtDate((data.exportadoEm || '').slice(0, 10))}?\n\nOs itens do arquivo substituem os iguais que já estão aqui. Os demais continuam.`)) return;
         const done = Store.importAll(data.registros);
+        let nArq = 0;
+        if (zip && data.arquivos) {
+          for (const [id, caminho] of Object.entries(data.arquivos)) {
+            const f = zip.file(caminho);
+            const a = Store.get(id);
+            if (!f || !a) continue;
+            const blob = await f.async('blob');
+            await Anexos.restore(id, new Blob([blob], { type: a.tipo || 'application/octet-stream' }));
+            nArq++;
+          }
+          if (nArq) Anexos.sync();
+        }
         cfgDraft = null;
         render();
-        toast(`${done} itens restaurados`);
+        toast(nArq ? `${done} itens e ${nArq} ${nArq === 1 ? 'arquivo restaurados' : 'arquivos restaurados'}` : `${done} itens restaurados`);
       } catch (err) {
         toast('Não foi possível ler o arquivo: ' + err.message, 6000);
       }
@@ -1935,6 +2005,7 @@
         return toast(syncText(), 5000);
       }
       case 'export': return exportBackup();
+      case 'export-zip': return exportZip(btn);
       case 'export-xlsx': return exportExcel(btn);
       case 'import': return importBackup();
       case 'install': return install();

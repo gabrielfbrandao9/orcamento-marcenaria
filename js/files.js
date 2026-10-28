@@ -256,6 +256,14 @@
       return typed;
     },
 
+    // Restauração da cópia completa: guarda o arquivo no aparelho e manda de novo para a nuvem
+    // (o arquivo pode ter sumido de lá). Quem chama roda sync() depois de restaurar todos.
+    async restore(id, blob) {
+      await local.put(id, blob);
+      const a = Store.get(id);
+      if (a && a.path) Store.put('anexo', { ...a, path: '' });
+    },
+
     remove(a) {
       Store.remove(a.id);
       errors.delete(a.id);
