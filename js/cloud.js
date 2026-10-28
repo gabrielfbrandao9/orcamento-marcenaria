@@ -108,6 +108,11 @@
       check(await client.rpc('equipe_sair'));
     },
 
+    // Marca que a pessoa abriu o app (o banco guarda no máximo a cada 5 minutos).
+    async registrarAcesso() {
+      check(await client.rpc('equipe_registrar_acesso'));
+    },
+
     // ---------- Projetos do Otimizador de Cortes (tabela "projects") ----------
 
     async listCutProjects() {

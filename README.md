@@ -56,10 +56,13 @@ Funciona no navegador, sem servidor próprio. É só HTML, CSS e JavaScript, com
   tema do celular ou do computador).
 - **Equipe**: em **Ajustes → Equipe**, convide outras pessoas pelo e-mail. Todos da equipe veem e
   alteram os mesmos orçamentos, clientes, materiais e ajustes; só quem convida (o dono) adiciona e
-  remove pessoas. Veja [SUPABASE.md](SUPABASE.md#3-equipe-mais-de-uma-conta-com-os-mesmos-dados).
+  remove pessoas. O dono vê o **último acesso** de cada pessoa; convites pendentes têm o botão
+  **Avisar no WhatsApp**. Veja [SUPABASE.md](SUPABASE.md#3-equipe-mais-de-uma-conta-com-os-mesmos-dados).
 - **Ajustes**: dados da marcenaria (saem no PDF), valores padrão para orçamentos novos
   (mão de obra, desconto, parcelas, juros, condições de pagamento), conta e
-  **cópia de segurança** (baixar e restaurar um arquivo `.json`).
+  **cópia de segurança** (baixar e restaurar um arquivo `.json`) e **planilha para o Excel**
+  (orçamentos com os totais, materiais de cada móvel, clientes e catálogo, cada um numa aba).
+- **Política de privacidade**: `privacidade.html` (link em Ajustes e na tela de entrar).
 
 ## Onde ficam os dados
 

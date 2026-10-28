@@ -8,12 +8,13 @@
  *
  * Ao mudar a lista de arquivos, aumente a versão para limpar o cache antigo.
  */
-const VERSION = 'v10';
+const VERSION = 'v11';
 const CACHE = `dier-${VERSION}`;
 
 const APP_FILES = [
   './',
   'index.html',
+  'privacidade.html',
   'manifest.webmanifest',
   'css/style.css',
   'js/config.js',

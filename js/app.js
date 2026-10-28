@@ -1535,6 +1535,7 @@
           <div class="btn-row">
             ${Cloud.enabled ? (user ? '<button type="button" class="btn" data-act="sync-now">Sincronizar agora</button><button type="button" class="btn ghost" data-act="logout">Sair da conta</button>' : '<button type="button" class="btn primary" data-act="login">Entrar</button>') : ''}
           </div>
+          <p class="muted" style="margin:12px 0 0;font-size:13px"><a href="privacidade.html">Política de privacidade</a>: quais dados o app guarda e como pedir para apagar.</p>
         </section>
         ${teamCard()}
         <section class="card">
@@ -1544,6 +1545,8 @@
             <button type="button" class="btn" data-act="export">Baixar cópia (.json)</button>
             <button type="button" class="btn" data-act="import">Restaurar cópia</button>
           </div>
+          <p class="muted" style="margin:14px 0 0">Para abrir no Excel ou no Google Planilhas: orçamentos com os totais, os materiais de cada móvel, os clientes e o catálogo, cada um numa aba. (Só para consulta: não dá para restaurar a partir da planilha.)</p>
+          <div class="btn-row"><button type="button" class="btn" data-act="export-xlsx">Baixar planilha (Excel)</button></div>
         </section>
         <section class="card">
           <div class="card-head"><h3>Aplicativo</h3></div>
@@ -1577,7 +1580,14 @@
         : souDono
           ? 'Todos da equipe veem e alteram os mesmos orçamentos, clientes, materiais e ajustes. Só você convida e remove pessoas.'
           : `Você faz parte da equipe <strong>${esc(e.nome || '')}</strong>. Todos veem e alteram os mesmos orçamentos, clientes, materiais e ajustes.`;
-      const pessoas = membros.map((m) => `<li><span class="who">${esc(m.email)}${m.user_id === user.id ? ' <span class="tag">(você)</span>' : ''}</span>
+      // Último acesso: o banco só manda para o dono.
+      const quando = (m) => {
+        const t = Math.max(Date.parse(m.ultimo_acesso || '') || 0, Date.parse(m.ultimo_login || '') || 0);
+        return t ? new Date(t).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
+      };
+      const acesso = (m) => (souDono && m.user_id !== user.id && ('ultimo_acesso' in m || 'ultimo_login' in m)
+        ? `<small class="seen">${quando(m) ? `Último acesso: ${quando(m)}` : 'Ainda não abriu o app'}</small>` : '');
+      const pessoas = membros.map((m) => `<li><span class="who">${esc(m.email)}${m.user_id === user.id ? ' <span class="tag">(você)</span>' : ''}${acesso(m)}</span>
           ${m.papel === 'dono' ? '<span class="tag">Dono</span>' : ''}
           ${souDono && m.user_id !== user.id ? `<button type="button" class="btn small danger-ghost" data-act="team-remove" data-id="${esc(m.user_id)}" data-email="${esc(m.email)}">Remover</button>` : ''}</li>`);
       const convites = enviados.map((c) => `<li><span class="who">${esc(c.email)} <span class="tag">aguardando</span></span>
@@ -1716,6 +1726,118 @@
     toast('Cópia de segurança baixada');
   }
 
+  // ---------- Planilha (Excel) ----------
+  // A biblioteca (SheetJS) só é baixada quando alguém exporta.
+
+  const XLSX_URL = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
+  let xlsxPronto = null;
+
+  function carregarXlsx() {
+    if (window.XLSX) return Promise.resolve(window.XLSX);
+    if (!xlsxPronto) {
+      xlsxPronto = new Promise((resolve, reject) => {
+        const s = document.createElement('script');
+        s.src = XLSX_URL;
+        s.onload = () => resolve(window.XLSX);
+        s.onerror = () => {
+          xlsxPronto = null;
+          reject(new Error('não foi possível baixar o gerador de planilhas (sem internet?)'));
+        };
+        document.head.appendChild(s);
+      });
+    }
+    return xlsxPronto;
+  }
+
+  // Data "AAAA-MM-DD" -> número de série do Excel, sem depender do fuso horário.
+  function xDate(s) {
+    const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(s || '');
+    return m ? (Date.UTC(+m[1], +m[2] - 1, +m[3]) - Date.UTC(1899, 11, 30)) / 86400000 : '';
+  }
+
+  function abasExcel() {
+    const cById = indexById(clients());
+    const orcs = quotes().slice().reverse();
+    const orcamentos = orcs.map((q) => {
+      const t = Calc.quote(q);
+      return {
+        Número: q.numero || '',
+        Data: xDate(q.data),
+        Situação: STATUS_LABEL[q.status] || q.status || '',
+        Cliente: clientName(q, cById),
+        Projeto: q.titulo || '',
+        Móveis: (q.moveis || []).map((m) => `${m.qtd > 1 ? `${m.qtd}× ` : ''}${m.nome || 'Móvel'}`).join('; '),
+        Materiais: t.materiais,
+        'Mão de obra': t.maoDeObra,
+        Frete: t.frete,
+        Instalação: t.instalacao,
+        Total: t.total,
+        'À vista': t.vista,
+        Parcelas: t.parcelas,
+        'Valor da parcela': t.valorParcela,
+      };
+    });
+    const itens = [];
+    orcs.forEach((q) => (q.moveis || []).forEach((m) => (m.itens || []).forEach((it) => {
+      if (!it.nome && !it.materialId) return;
+      itens.push({
+        Orçamento: q.numero || '',
+        Cliente: clientName(q, cById),
+        Móvel: m.nome || '',
+        'Qtd do móvel': Calc.movel(m).qtd,
+        Material: it.nome || '',
+        Unidade: it.unidade || '',
+        Quantidade: Number(it.qtd) || 0,
+        'Preço unitário': Number(it.preco) || 0,
+        Subtotal: Calc.itemTotal(it),
+      });
+    })));
+    const clientes = clients().map((c) => ({
+      Nome: c.nome || '', Telefone: c.telefone || '', Endereço: c.endereco || '', Cidade: c.cidade || '', Anotações: c.obs || '',
+      Orçamentos: orcs.filter((q) => q.clienteId === c.id).length,
+    }));
+    const catalogo = Store.all('material')
+      .sort((a, b) => (a.categoria || '').localeCompare(b.categoria || '', 'pt-BR') || (a.nome || '').localeCompare(b.nome || '', 'pt-BR'))
+      .map((m) => ({ Categoria: m.categoria || '', Material: m.nome || '', Unidade: m.unidade || '', 'Preço de custo': Number(m.preco) || 0 }));
+    return [
+      { nome: 'Orçamentos', linhas: orcamentos, datas: ['Data'], dinheiro: ['Materiais', 'Mão de obra', 'Frete', 'Instalação', 'Total', 'À vista', 'Valor da parcela'] },
+      { nome: 'Itens', linhas: itens, dinheiro: ['Preço unitário', 'Subtotal'] },
+      { nome: 'Clientes', linhas: clientes },
+      { nome: 'Catálogo', linhas: catalogo, dinheiro: ['Preço de custo'] },
+    ];
+  }
+
+  async function exportExcel(btn) {
+    if (btn) btn.disabled = true;
+    toast('Preparando a planilha…', 20000);
+    try {
+      const XLSX = await carregarXlsx();
+      const wb = XLSX.utils.book_new();
+      for (const aba of abasExcel()) {
+        const ws = aba.linhas.length ? XLSX.utils.json_to_sheet(aba.linhas) : XLSX.utils.aoa_to_sheet([['Nenhum registro']]);
+        const cols = aba.linhas.length ? Object.keys(aba.linhas[0]) : [];
+        cols.forEach((c, j) => {
+          const z = (aba.datas || []).includes(c) ? 'dd/mm/yyyy' : (aba.dinheiro || []).includes(c) ? '"R$" #,##0.00' : null;
+          if (!z) return;
+          for (let i = 1; i <= aba.linhas.length; i++) {
+            const cell = ws[XLSX.utils.encode_cell({ r: i, c: j })];
+            if (cell && typeof cell.v === 'number') cell.z = z;
+          }
+        });
+        ws['!cols'] = cols.map((c) => ({
+          wch: Math.min(45, Math.max(c.length, ...aba.linhas.map((l) => ((aba.datas || []).includes(c) ? 10 : String(l[c] ?? '').length))) + 2),
+        }));
+        XLSX.utils.book_append_sheet(wb, ws, aba.nome);
+      }
+      XLSX.writeFile(wb, `orcamentos-${today()}.xlsx`);
+      toast('Planilha baixada');
+    } catch (err) {
+      toast(`Não foi possível gerar a planilha: ${err.message}`, 6000);
+    } finally {
+      if (btn) btn.disabled = false;
+    }
+  }
+
   function importBackup() {
     const input = $('#fileInput');
     input.value = '';
@@ -1813,6 +1935,7 @@
         return toast(syncText(), 5000);
       }
       case 'export': return exportBackup();
+      case 'export-xlsx': return exportExcel(btn);
       case 'import': return importBackup();
       case 'install': return install();
       case 'toggle-theme': return setTheme(isDark() ? 'light' : 'dark');
@@ -1972,6 +2095,7 @@
       Store.setUser(u);
       Anexos.setUser(u);
       renderSync();
+      if (u) Cloud.registrarAcesso().catch(() => {}); // banco antigo ou sem internet: segue sem registrar
       if (u && !previous && event === 'SIGNED_IN') {
         if ($('#dlgLogin').open) $('#dlgLogin').close();
         toast(`Conectado como ${u.email || 'usuário'}`);

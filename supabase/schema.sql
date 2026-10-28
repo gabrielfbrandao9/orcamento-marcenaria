@@ -28,6 +28,8 @@ create table if not exists public.equipe_membros (
   entrou_em timestamptz not null default now()
 );
 create index if not exists equipe_membros_equipe_idx on public.equipe_membros (equipe_id);
+-- Última vez que a pessoa abriu o app (o próprio app registra; só o dono vê)
+alter table public.equipe_membros add column if not exists ultimo_acesso timestamptz;
 
 create table if not exists public.equipe_convites (
   id uuid primary key default gen_random_uuid(),
@@ -170,6 +172,7 @@ as $$
 declare
   uid uuid := auth.uid();
   eq uuid := public.minha_equipe();
+  dono boolean := exists (select 1 from public.equipe_membros m where m.user_id = auth.uid() and m.papel = 'dono');
 begin
   if uid is null then
     raise exception 'Entre na conta.';
@@ -178,10 +181,15 @@ begin
     'equipe_id', eq,
     'nome', (select e.nome from public.equipes e where e.id = eq),
     'papel', (select m.papel from public.equipe_membros m where m.user_id = uid),
+    -- último acesso ao app e último login: só para o dono
     'membros', coalesce((
       select jsonb_agg(jsonb_build_object('user_id', m.user_id, 'email', m.email, 'papel', m.papel)
+                       || case when dono then jsonb_build_object('ultimo_acesso', m.ultimo_acesso, 'ultimo_login', u.last_sign_in_at)
+                               else '{}'::jsonb end
                        order by m.papel, m.email)
-      from public.equipe_membros m where m.equipe_id = eq), '[]'::jsonb),
+      from public.equipe_membros m
+      left join auth.users u on u.id = m.user_id
+      where m.equipe_id = eq), '[]'::jsonb),
     'convites_enviados', coalesce((
       select jsonb_agg(jsonb_build_object('id', c.id, 'email', c.email) order by c.criado_em)
       from public.equipe_convites c where c.equipe_id = eq), '[]'::jsonb),
@@ -339,13 +347,28 @@ begin
 end;
 $$;
 
+-- Registra que a pessoa abriu o app (no máximo a cada 5 minutos). Sem equipe, não faz nada.
+create or replace function public.equipe_registrar_acesso()
+returns void
+language sql
+security definer
+set search_path = ''
+as $$
+  update public.equipe_membros
+  set ultimo_acesso = now()
+  where user_id = auth.uid()
+    and (ultimo_acesso is null or ultimo_acesso < now() - interval '5 minutes');
+$$;
+
 revoke execute on function public.minha_equipe(), public.meu_email(), public.equipe_estado(),
   public.equipe_convidar(text, text), public.equipe_apagar_convite(uuid),
-  public.equipe_aceitar_convite(uuid, boolean), public.equipe_remover_membro(uuid), public.equipe_sair()
+  public.equipe_aceitar_convite(uuid, boolean), public.equipe_remover_membro(uuid), public.equipe_sair(),
+  public.equipe_registrar_acesso()
   from public, anon;
 grant execute on function public.minha_equipe(), public.meu_email(), public.equipe_estado(),
   public.equipe_convidar(text, text), public.equipe_apagar_convite(uuid),
-  public.equipe_aceitar_convite(uuid, boolean), public.equipe_remover_membro(uuid), public.equipe_sair()
+  public.equipe_aceitar_convite(uuid, boolean), public.equipe_remover_membro(uuid), public.equipe_sair(),
+  public.equipe_registrar_acesso()
   to authenticated;
 
 -- ---------------------------------------------------------------------------
