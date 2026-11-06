@@ -120,3 +120,20 @@ Depois acesse http://localhost:8766.
 
 3. No GitHub: **Settings → Pages → Branch: main / (root) → Save**.
 4. Em alguns minutos o site fica em `https://gabrielfbrandao9.github.io/orcamento-marcenaria/`.
+
+## App Android (.apk)
+
+**Baixar:** <https://github.com/gabrielfbrandao9/orcamento-marcenaria/releases/latest/download/OrcamentoMarcenaria.apk>
+
+`android/` tem um app mínimo em Java: um WebView que abre o site publicado e guarda uma cópia para usar
+sem internet. O site não muda nada: `android/shim.js` entra em cada página dentro do app e faz funcionar
+o que o WebView não tem (baixar, abrir e compartilhar arquivos, login com Google pelo navegador, botão voltar).
+
+- **Telas e funções:** chegam sozinhas. Basta publicar o site (`git push`) e na próxima abertura do app está lá.
+- **Parte Android:** precisa de APK novo. O app avisa quando há Release mais nova.
+
+Gerar o APK (Git Bash, na pasta do projeto): `bash android/build-apk.sh`. Sai em `dist/OrcamentoMarcenaria.apk`.
+Para uma versão nova, aumente os dois números em `android/versao.txt`.
+
+A chave de assinatura fica fora do Git, em `Documents\Claude Code\apk-chaves` (`com.gabrielfbrandao.orcamentos.*`).
+**Guarde essa pasta:** sem ela, versões novas não instalam por cima da antiga.
