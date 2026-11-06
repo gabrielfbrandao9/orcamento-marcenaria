@@ -172,7 +172,6 @@
   const MONEY_FIELDS = ['frete', 'instalacao'];
 
   let user = null;
-  let installPrompt = null;
   let current = { name: '', id: null };
   let editing = null; // orçamento aberto no editor (cópia de trabalho)
   let saveTimer = null;
@@ -1551,9 +1550,10 @@
         </section>
         <section class="card">
           <div class="card-head"><h3>Aplicativo</h3></div>
-          <p class="muted">No celular Android, abra o site no Chrome e toque em <strong>⋮ → Instalar app</strong> (ou “Adicionar à tela inicial”).
-            O ícone da Marcenaria Dier aparece na tela inicial e o app funciona mesmo sem internet.</p>
-          <div class="btn-row"><button type="button" class="btn primary" data-act="install" ${installPrompt ? '' : 'hidden'}>Instalar app</button></div>
+          <p class="muted">${window.Android
+            ? 'As telas e funções chegam sozinhas quando o app abre com internet. Aqui você confere se há uma versão nova do próprio app.'
+            : 'Baixe o app para Android e toque no arquivo para instalar. O ícone da Marcenaria Dier aparece na tela inicial e o app funciona mesmo sem internet.'}</p>
+          <div class="btn-row"><button type="button" class="btn primary" data-app-apk="Atualizar app" hidden>Instalar app</button></div>
         </section>
       </div>`;
   }
@@ -2008,7 +2008,6 @@
       case 'export-zip': return exportZip(btn);
       case 'export-xlsx': return exportExcel(btn);
       case 'import': return importBackup();
-      case 'install': return install();
       case 'toggle-theme': return setTheme(isDark() ? 'light' : 'dark');
       case 'theme': return setTheme(btn.dataset.value);
       case 'team-invite-send': return teamInvite();
@@ -2216,33 +2215,10 @@
 
   darkQuery.addEventListener('change', renderTheme);
 
-  // ---------- App instalável ----------
-
-  async function install() {
-    if (!installPrompt) return;
-    installPrompt.prompt();
-    await installPrompt.userChoice.catch(() => null);
-    installPrompt = null;
-    $('#btnInstall').hidden = true;
-  }
-
   function bindApp() {
     if ('serviceWorker' in navigator && location.protocol !== 'file:') {
       window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
     }
-    window.addEventListener('beforeinstallprompt', (e) => {
-      e.preventDefault();
-      installPrompt = e;
-      $('#btnInstall').hidden = false;
-      const b = view.querySelector('[data-act="install"]');
-      if (b) b.hidden = false;
-    });
-    $('#btnInstall').addEventListener('click', install);
-    window.addEventListener('appinstalled', () => {
-      $('#btnInstall').hidden = true;
-      toast('App instalado! Procure “Orçamentos” na tela inicial.');
-    });
-
     window.addEventListener('online', () => { toast('Conexão restabelecida'); Store.sync(true); Anexos.sync(); });
     window.addEventListener('offline', () => { renderSync(); toast('Sem internet: pode continuar usando. As alterações sobem quando a conexão voltar.', 5000); });
 

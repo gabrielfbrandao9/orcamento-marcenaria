@@ -76,9 +76,11 @@ criar a tabela uma vez: veja [SUPABASE.md](SUPABASE.md).
 
 ## Aplicativo para Android
 
-1. No celular, abra o site no **Chrome**.
-2. Toque em **⋮ → Instalar app** (ou **Adicionar à tela inicial**).
+1. No celular, abra o site e toque no botão de baixar, no topo da página, ou em **Ajustes → Instalar app**. O botão baixa o APK.
+2. Toque no arquivo baixado para instalar.
 3. O ícone da Marcenaria Dier aparece na tela inicial. O app abre em tela cheia e funciona sem internet.
+
+Dentro do app, o mesmo botão vira **Atualizar** e procura uma versão nova (`js/app-apk.js`).
 
 Ao adicionar um arquivo novo ao site, inclua-o na lista `APP_FILES` do `sw.js` e aumente a `VERSION`.
 

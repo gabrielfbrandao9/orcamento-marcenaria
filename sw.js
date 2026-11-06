@@ -8,7 +8,7 @@
  *
  * Ao mudar a lista de arquivos, aumente a versão para limpar o cache antigo.
  */
-const VERSION = 'v11';
+const VERSION = 'v12';
 const CACHE = `dier-${VERSION}`;
 
 const APP_FILES = [
@@ -26,6 +26,7 @@ const APP_FILES = [
   'js/files.js',
   'js/plano.js',
   'js/app.js',
+  'js/app-apk.js',
   'icons/icon-192.png',
   'icons/icon-512.png',
   'icons/icon-maskable-512.png',
