@@ -861,9 +861,20 @@ dialog::backdrop { background: rgba(20, 15, 10, 0.45); }
   .install-btn:not([hidden]) { width: 34px; height: 34px; min-height: 0; padding: 0; font-size: 0; flex: none; justify-content: center; }
   .install-btn::before { content: ''; width: 18px; height: 18px; background: currentColor; -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 4v11M7 11l5 5 5-5M5 20h14'/%3E%3C/svg%3E") center / contain no-repeat; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 4v11M7 11l5 5 5-5M5 20h14'/%3E%3C/svg%3E") center / contain no-repeat; }
   .install-btn[data-apk-pronto='app']::before { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 12a8 8 0 1 1-2.3-5.7M20 3v5h-5'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 12a8 8 0 1 1-2.3-5.7M20 3v5h-5'/%3E%3C/svg%3E"); }
-  .top-right { min-width: 0; }
-  .sync { display: block; min-width: 0; overflow: hidden; text-overflow: ellipsis; font-size: 12px; }
-  .sync::before { display: inline-block; margin: 0 6px 1px 0; vertical-align: middle; }
+  .top-right { min-width: 0; gap: 6px; }
+
+  /* Botões do topo: todos com o mesmo tamanho e o mesmo formato */
+  .app-switch a, .install-btn:not([hidden]), .theme-btn { width: 34px; height: 34px; min-height: 0; border-radius: 50%; flex: none; box-shadow: none; }
+  .theme-btn { display: inline-flex; align-items: center; justify-content: center; padding: 0; border: 1px solid var(--line-strong, var(--line)); }
+  .theme-btn svg { width: 18px; height: 18px; }
+  .account .user { flex: none; }
+  .account .avatar { width: 34px; height: 34px; }
+  /* Dentro do app, Atualizar é discreto como os outros */
+  .install-btn[data-apk-pronto='app'] { background: none; color: var(--muted); border: 1px solid var(--line-strong, var(--line)); }
+
+  /* Status de salvamento: só o ponto colorido (o texto aparece ao tocar) */
+  .sync, .sync[data-state] { display: inline-flex; flex: none; width: 16px; height: 34px; padding: 0; justify-content: center; font-size: 0; background: none; }
+  .sync::before { width: 9px; height: 9px; }
 
   /* Navegação vira barra de abas embaixo */
   .nav {
@@ -929,5 +940,10 @@ dialog::backdrop { background: rgba(20, 15, 10, 0.45); }
   .brand { gap: 7px; }
   .logo { width: 30px; height: 30px; }
   .brand-text strong { font-size: 15.5px; }
-  .top-right { gap: 5px; }
+  .top-right { gap: 4px; }
+}
+
+/* Sem espaço para o nome ao lado de todos os botões: fica o logo */
+@media (max-width: 349px) {
+  .brand-text { display: none; }
 }
